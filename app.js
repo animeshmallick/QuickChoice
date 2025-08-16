@@ -18,10 +18,12 @@ const accessLogStream = fs.createWriteStream(path.join(logDirectory, 'access.log
 
 // Middlewares
 app.use(cors({
-    origin: ['https://www.grocerschoice.in', 'https://www.quickchoice.in'],
+    origin: ['https://www.grocerschoice.in', 'https://api.quickchoice.in', 'http://localhost:5173',
+        'https://qa.grocerschoice.in', 'https://api.qa.quickchoice.in'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
