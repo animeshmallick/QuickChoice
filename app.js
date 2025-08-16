@@ -16,13 +16,27 @@ if (!fs.existsSync(logDirectory)) {
 }
 const accessLogStream = fs.createWriteStream(path.join(logDirectory, 'access.log'), { flags: 'a' });
 
-// Middlewares
-app.use(cors({
-    origin: ['https://www.grocerschoice.in', 'https://api.quickchoice.in', 'http://localhost:5173',
-        'https://qa.grocerschoice.in', 'https://api.qa.quickchoice.in'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true
-}));
+const allowedOrigins = [
+    'https://www.grocerschoice.in',
+    'https://qa.grocerschoice.in',
+    'http://localhost:5173'
+];
+
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Authorization,Content-Type,x-authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(204);
+    }
+    next();
+});
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
