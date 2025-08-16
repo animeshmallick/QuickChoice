@@ -1,0 +1,10 @@
+[
+  {
+  "customer_id": "USER001",
+  "status": "PLACED",
+  "address_id": "ADDR001",
+  "order_id": "OID-050825222945-ABCDEF-G8JUB9GQ",
+  "payment_id": "cod",
+  "placed_on": "2025-08-05T11:29:45.000Z"
+}
+]

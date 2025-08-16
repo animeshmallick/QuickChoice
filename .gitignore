@@ -1,0 +1,31 @@
+# Ignore environment variables
+.idea
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+package-lock.json
+report.html
+jest-html-reporters-attach
+
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Logs
+logs/
+*.log
+debug.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+coverage/
+test_results/
+.nyc_output

@@ -1,0 +1,36 @@
+[
+  {
+    "id": 2,
+    "name": "Organic Milk",
+    "category": "Dairy",
+    "subcategory": "Milk",
+    "brand": "Nature's Best",
+    "sku": "OM-2001",
+    "barcode": "1234567890456",
+    "mrp": 4.49,
+    "selling_price": 4.29,
+    "stock": 30,
+    "size": "1L",
+    "description": "Fresh organic milk from grass-fed cows.",
+    "image_url": "https://example.com/images/organic_milk.jpg",
+    "expiration_date": "2025-03-24T18:30:00.000Z",
+    "added_on": "2025-03-17T05:00:36.000Z"
+  },
+  {
+    "id": 3,
+    "name": "Cheddar Cheese",
+    "category": "Dairy",
+    "subcategory": "Cheese",
+    "brand": "Cheese Delight",
+    "sku": "CC-3001",
+    "barcode": "1234567890789",
+    "mrp": 5.99,
+    "selling_price": 5.49,
+    "stock": 40,
+    "size": "250g",
+    "description": "Aged cheddar cheese with a rich and creamy flavor.",
+    "image_url": "https://example.com/images/cheddar_cheese.jpg",
+    "expiration_date": "2025-05-09T18:30:00.000Z",
+    "added_on": "2025-03-17T05:00:36.000Z"
+  }
+]

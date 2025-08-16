@@ -1,0 +1,19 @@
+[
+  {
+    "id": 3,
+    "name": "Cheddar Cheese",
+    "category": "Dairy",
+    "subcategory": "Cheese",
+    "brand": "Cheese Delight",
+    "sku": "CC-3001",
+    "barcode": "1234567890789",
+    "mrp": 5.99,
+    "selling_price": 5.49,
+    "stock": 40,
+    "size": "250g",
+    "description": "Aged cheddar cheese with a rich and creamy flavor.",
+    "image_url": "https://example.com/images/cheddar_cheese.jpg",
+    "expiration_date": "2025-05-09T18:30:00.000Z",
+    "added_on": "2025-03-17T05:00:36.000Z"
+  }
+]

@@ -1,0 +1,12 @@
+const Bill = Object.freeze({
+    //All values are in INR
+    DELIVERY_FEE: 10.00,
+    MIN_AMOUNT_FOR_FREE_DELIVERY: 200.00,
+    PACKAGING_FEE: 3.00,
+    MIN_AMOUNT_FOR_FREE_PACKAGING: 500.00,
+    PLATFORM_FEE: 2.00,
+    SMALL_CART_FEE: 5.00,
+    MIN_AMOUNT_FOR_BIG_CART: 100.00,
+    RESTRICTED_CART_FEE: 2.00
+});
+module.exports = Bill;
