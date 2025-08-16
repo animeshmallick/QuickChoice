@@ -17,7 +17,11 @@ if (!fs.existsSync(logDirectory)) {
 const accessLogStream = fs.createWriteStream(path.join(logDirectory, 'access.log'), { flags: 'a' });
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+    origin: ['https://www.grocerschoice.in', 'https://www.quickchoice.in'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
