@@ -25,9 +25,13 @@ jobs:
       - name: Run Jest tests
         run: npm test
 
-      - name: Determine deployment target
+      - name: Determine deployment target and setup SSH
         id: set-target
         run: |
+          # Create SSH folder
+          mkdir -p ~/.ssh
+
+          # Select target host and write SSH key
           if [ "${GITHUB_REF_NAME}" == "mainline" ]; then
             echo "HOST=${{ secrets.EC2_PROD_HOST }}" >> $GITHUB_ENV
             printf "%s\n" "${{ secrets.EC2_PROD_PRIVATE_KEY }}" > ~/.ssh/id_rsa
@@ -38,9 +42,11 @@ jobs:
             echo "No deployment for this branch."
             exit 0
           fi
+          
+          # Set permissions
           chmod 600 ~/.ssh/id_rsa
 
-      - name: Set up SSH known hosts
+      - name: Add host to known_hosts
         run: |
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
 
