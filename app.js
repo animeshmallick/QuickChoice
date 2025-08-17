@@ -81,6 +81,9 @@ app.use('/changeStoreTiming', require('./src//routes/changeStoreTiming'));
 app.use('/verifyCoupon', require('./src/routes/verifyCoupon'));
 app.use('/setDefaultAddress', require('./src/routes/setDefaultAddress'));
 app.use('/saveFeedback', require('./src/routes/saveFeedback'));
+app.use('/changeAddress', require('./src/routes/changeAddress'));
+app.use('/mostOrderedProduct', require('./src/routes/mostOrderedProduct'));
+app.use('/deleteAddress', require('./src/routes/deleteAddress'));
 
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
