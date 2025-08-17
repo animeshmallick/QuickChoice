@@ -1,8 +1,9 @@
-jest.mock('../src/internal/database', () => ({
-    query: jest.fn(),
-    end: jest.fn()
-}));
-
+const mockQuery = jest.fn();
+jest.mock('../src/internal/database', () =>{
+    return jest.fn().mockImplementation(() => {
+        return { query: mockQuery };
+    });
+});
 jest.mock('../src/internal/token', () => ({
     verifyAuthToken: jest.fn()
 }));
@@ -13,7 +14,6 @@ jest.mock('../src/resource/sql', () => ({
 
 const request = require('supertest');
 const express = require('express');
-const database = require('../src/internal/database');
 const token = require('../src/internal/token');
 const Sql = require('../src/resource/sql');
 const getUserProfileRouter = require('../src/routes/getUserProfile');
@@ -24,7 +24,7 @@ app.use('/', getUserProfileRouter);
 
 describe('GET /getUserProfile', () => {
     beforeEach(() => {
-        jest.clearAllMocks();
+        mockQuery.mockReset();
     });
 
     it('should return 401 if token verification fails', async () => {
@@ -32,7 +32,7 @@ describe('GET /getUserProfile', () => {
             res.status(401).json({ message: "Invalid Authorization Token" });
         });
 
-        const res = await request(app).get('/');
+        const res = await request(app).get('/').set('x-storename', 'dummyStore');
         expect(res.statusCode).toBe(401);
         expect(res.body).toStrictEqual({ message: "Invalid Authorization Token" });
     });
@@ -43,10 +43,11 @@ describe('GET /getUserProfile', () => {
             next();
         });
 
-        database.query.mockResolvedValueOnce([{ fname: 'John', lname: 'Doe', phone: '+91 9876543210' }]);
+        mockQuery.mockResolvedValueOnce([{ fname: 'John', lname: 'Doe', phone: '+91 9876543210' }]);
 
         const res = await request(app)
             .get('/')
+            .set('x-storename', 'dummyStore')
             .set('x-authorization', 'Bearer validtoken');
 
         expect(res.statusCode).toBe(200);
@@ -55,7 +56,7 @@ describe('GET /getUserProfile', () => {
             lname: 'Doe',
             phone: '+91 9876543210'
         });
-        expect(database.query).toHaveBeenCalledWith(Sql.get_user_profile('USER001'));
+        expect(mockQuery).toHaveBeenCalledWith(Sql.get_user_profile('USER001'));
     });
 
     it('should return 500 if database query fails', async () => {
@@ -64,10 +65,11 @@ describe('GET /getUserProfile', () => {
             next();
         });
 
-        database.query.mockRejectedValueOnce(new Error('DB error'));
+        mockQuery.mockRejectedValueOnce(new Error('DB error'));
 
         const res = await request(app)
             .get('/')
+            .set('x-storename', 'dummyStore')
             .set('x-authorization', 'Bearer validtoken');
 
         expect(res.statusCode).toBe(500);

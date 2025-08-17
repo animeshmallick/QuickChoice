@@ -1,7 +1,8 @@
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const Token = require('../internal/token.js');
 const Sql = require('../resource/sql.js');
 const express = require('express');
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -73,8 +74,9 @@ const router = express.Router();
  *                   type: string
  *                   example: "Internal server error"
  */
-router.post('/', function (req, res, next) {
+router.post('/', util.verifyStoreName, function (req, res, next) {
     const loginDetails = req.body;
+    const database = new Database(req.storename);
     if (!loginDetails.hasOwnProperty('phone') || !loginDetails.hasOwnProperty('password'))
         return res.status(400).json({error: "Invalid Login Details"});
     let adminAuthToken = "";

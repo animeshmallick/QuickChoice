@@ -1,7 +1,9 @@
-jest.mock('../src/internal/database', () => ({
-    query: jest.fn(),
-    end: jest.fn()
-}));
+const mockQuery = jest.fn();
+jest.mock('../src/internal/database', () =>{
+    return jest.fn().mockImplementation(() => {
+        return { query: mockQuery };
+    });
+});
 
 jest.mock('../src/internal/token', () => ({
     verifyAdminAuthToken: jest.fn()
@@ -13,7 +15,6 @@ jest.mock('../src/helpers/changePurchaseStatusHelper', () => ({
 
 const request = require('supertest');
 const express = require('express');
-const database = require('../src/internal/database');
 const Token = require('../src/internal/token');
 const statusHelper = require('../src/helpers/changePurchaseStatusHelper');
 const changePurchaseStatus = require('../src/routes/changePurchaseStatus');
@@ -24,7 +25,7 @@ app.use('/', changePurchaseStatus);
 
 describe('Change Purchase Status Route', () => {
     beforeEach(() => {
-        jest.clearAllMocks();
+        mockQuery.mockReset();
     });
 
     it('should return 403 if no auth token provided', async () => {
@@ -32,7 +33,7 @@ describe('Change Purchase Status Route', () => {
             res.status(403).json({ message: "Authorization Token Missing" });
         });
 
-        const res = await request(app).post('/PURCH123/CONFIRMED');
+        const res = await request(app).post('/PURCH123/CONFIRMED').set('x-storename','dummyStore');
         expect(res.statusCode).toBe(403);
         expect(res.body).toStrictEqual({ message: "Authorization Token Missing" });
     });
@@ -44,6 +45,7 @@ describe('Change Purchase Status Route', () => {
 
         const res = await request(app)
             .post('/PURCH123/CONFIRMED')
+            .set('x-storename', 'dummyStore')
             .set('x-authorization', 'Bearer badtoken');
 
         expect(res.statusCode).toBe(401);
@@ -56,10 +58,11 @@ describe('Change Purchase Status Route', () => {
             next();
         });
 
-        database.query.mockResolvedValueOnce([]); // No purchase found
+        mockQuery.mockResolvedValueOnce([]); // No purchase found
 
         const res = await request(app)
             .post('/PURCH999/CONFIRMED')
+            .set('x-storename', 'dummyStore')
             .set('x-authorization', 'Bearer validtoken');
 
         expect(res.statusCode).toBe(404);
@@ -72,11 +75,12 @@ describe('Change Purchase Status Route', () => {
             next();
         });
 
-        database.query.mockResolvedValueOnce([{ status: 'PLACED' }]);
+        mockQuery.mockResolvedValueOnce([{ status: 'PLACED' }]);
         statusHelper.isStatusChangeAllowed.mockReturnValue(false);
 
         const res = await request(app)
             .post('/PURCH123/DELIVERED_WITH_PAYMENT_SUCCESS')
+            .set('x-storename', 'dummyStore')
             .set('x-authorization', 'Bearer validtoken');
 
         expect(res.statusCode).toBe(400);
@@ -91,7 +95,7 @@ describe('Change Purchase Status Route', () => {
             next();
         });
 
-        database.query
+        mockQuery
             .mockResolvedValueOnce([{ status: 'PLACED' }]) // First query: current status
             .mockResolvedValueOnce({ affectedRows: 1 });    // Second query: update success
 
@@ -99,13 +103,14 @@ describe('Change Purchase Status Route', () => {
 
         const res = await request(app)
             .post('/PURCH123/CONFIRMED')
+            .set('x-storename', 'dummyStore')
             .set('x-authorization', 'Bearer validtoken');
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toStrictEqual({
             success: "Status Change Success from [PLACED] to [CONFIRMED]"
         });
-        expect(database.query).toHaveBeenCalledTimes(2);
+        expect(mockQuery).toHaveBeenCalledTimes(2);
     });
 
 });

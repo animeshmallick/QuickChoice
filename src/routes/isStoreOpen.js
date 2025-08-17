@@ -1,7 +1,8 @@
 const express = require('express');
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const Sql = require('../resource/sql.js');
 const StoreOpen = require('../helpers/storeOpenHelper.js');
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -29,7 +30,8 @@ const router = express.Router();
  *
  */
 
-router.get('/',(req,res)=> {
+router.get('/', util.verifyStoreName, (req,res) => {
+    const database = new Database(req.storename);
     database.query(Sql.get_store_timings())
         .then(result => {
             if (result.length === 1 && result[0].opening_time && result[0].closing_time){

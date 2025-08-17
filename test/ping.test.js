@@ -9,21 +9,23 @@ app.use('/', pingTest);
 
 describe('Ping Router', () => {
     it('GET / Call to Ping Router', async () => {
-        const res = await request(app).get('/');
+        const res = await request(app).get('/').set('x-storename', 'dummyStore');
 
         expect(res.statusCode).toEqual(200);
         expect(res.body).toStrictEqual({"message": "Ping From Backend Server"});
     });
     it('POST / Call to Ping Router with AuthToken', async () => {
         const authToken = token.getAdminToken("test_user");
-        const res = await request(app).post('/').set('x-authorization', `Bearer ${authToken}`);
+        const res = await request(app).post('/')
+            .set('x-storename', 'dummyStore')
+            .set('x-authorization', `Bearer ${authToken}`);
 
         expect(res.statusCode).toEqual(200);
         expect(res.body).toStrictEqual({"message": "Ping From Backend Server", "user": "test_user"});
     });
 
     it('POST / Call to Ping Router without authToken', async () => {
-        const res = await request(app).post('/');
+        const res = await request(app).post('/').set('x-storename', 'dummyStore');
 
         expect(res.statusCode).toEqual(403);
         expect(res.body).toStrictEqual({"message": "Admin Authorization Token Missing"});

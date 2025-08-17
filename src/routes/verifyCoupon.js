@@ -1,9 +1,10 @@
-const database = require('../internal/database.js')
+const Database = require('../internal/database.js')
 const Sql = require('../resource/sql.js');
 const express = require('express');
 const token = require('../internal/token');
 const {isValidCoupon} = require('../helpers/couponHelper.js');
 const router = express.Router();
+const util = require('../utils/utils.js');
 
 
 /**
@@ -30,7 +31,7 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.get('/:coupon', token.verifyAuthToken,
+router.get('/:coupon', util.verifyStoreName, token.verifyAuthToken,
     function (req, res, next) {
     const coupon = req.params.coupon;
     const customerId = req.customer_id;
@@ -39,6 +40,7 @@ router.get('/:coupon', token.verifyAuthToken,
         return res.status(400).json({success: false, message: 'Coupon or customer ID missing'});
     }
     if(isValidCoupon(coupon)){
+        const database = new Database(req.storename);
         database.query(Sql.get_order_count_from_customer_id(customerId))
             .then(result => {
                 console.log(`${result[0].total} orders were placed today by customer ${customerId}`);

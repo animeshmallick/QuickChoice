@@ -1,7 +1,8 @@
-const database = require('../internal/database');
+const Database = require('../internal/database');
 const Sql = require('../resource/sql');
 const express = require('express');
 const GetAllProductsHelper = require("../helpers/getAllProducts");
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -52,7 +53,8 @@ const router = express.Router();
  *                   type: string
  *                   example: "Database connection failed"
  */
-router.get("/", function (req, res, next) {
+router.get("/", util.verifyStoreName, function (req, res, next) {
+    const database = new Database(req.storename);
     database.query(Sql.get_all_products())
         .then(sql_response =>{
             res.status(200).json(GetAllProductsHelper.parseResultForBetterSearch(sql_response));

@@ -1,23 +1,32 @@
-jest.mock('../src/internal/database', () => ({
-    query: jest.fn(),
-    end: jest.fn()
-}));
+const mockQuery = jest.fn();
+jest.mock('../src/internal/database', () =>{
+    return jest.fn().mockImplementation(() => {
+        return { query: mockQuery };
+    });
+});
 
 jest.mock('../src/internal/token', () => ({
     verifyAuthToken: jest.fn(),
     verifyAdminAuthToken: jest.fn()
 }));
 
-jest.mock('../src/helpers/getPurchaseDocumentHelper', () => ({
-    getAddress: jest.fn(),
-    getPayment: jest.fn(),
-    getOrders: jest.fn(),
-    findProduct: jest.fn()
-}));
+const mockGetAddress = jest.fn();
+const mockGetPayment = jest.fn();
+const mockGetOrders = jest.fn();
+const mockFindProduct = jest.fn();
+jest.mock('../src/helpers/getPurchaseDocumentHelper', () => {
+    return jest.fn().mockImplementation(() => {
+        return {
+            getAddress: mockGetAddress,
+            getPayment: mockGetPayment,
+            getOrders: mockGetOrders,
+            findProduct: mockFindProduct
+        };
+    });
+});
 
 const request = require('supertest');
 const express = require('express');
-const database = require('../src/internal/database');
 const token = require('../src/internal/token');
 const getPurchaseDocHelper = require('../src/helpers/getPurchaseDocumentHelper');
 const getPurchaseDocRouter = require('../src/routes/getPurchaseDocument');
@@ -29,7 +38,7 @@ app.use('/', getPurchaseDocRouter);
 
 describe('GET /getPurchaseDoc/:purchaseID (User)', () => {
     beforeEach(() => {
-        jest.clearAllMocks();
+        mockQuery.mockReset();
     });
 
     it('should return 403 if no auth token provided', async () => {
@@ -37,7 +46,7 @@ describe('GET /getPurchaseDoc/:purchaseID (User)', () => {
             res.status(403).json({ message: "Authorization Token Missing" });
         });
 
-        const res = await request(app).get('/123');
+        const res = await request(app).get('/123').set('x-storename','dummyStore');
         expect(res.statusCode).toBe(403);
         expect(res.body).toStrictEqual({ message: "Authorization Token Missing" });
     });
@@ -47,9 +56,9 @@ describe('GET /getPurchaseDoc/:purchaseID (User)', () => {
             req.customer_id = 'USER001';
             next();
         });
-        database.query.mockResolvedValueOnce([{ customer_id: 'OTHER_USER' }]);
+        mockQuery.mockResolvedValueOnce([{ customer_id: 'OTHER_USER' }]);
 
-        const res = await request(app).get('/PURCHASE123');
+        const res = await request(app).get('/PURCHASE123').set('x-storename','dummyStore');
         expect(res.statusCode).toBe(401);
         expect(res.body.error).toMatch(/Unauthorized Access/);
     });
@@ -59,9 +68,9 @@ describe('GET /getPurchaseDoc/:purchaseID (User)', () => {
             req.customer_id = 'USER001';
             next();
         });
-        database.query.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([]);
 
-        const res = await request(app).get('/INVALID_ID');
+        const res = await request(app).get('/INVALID_ID').set('x-storename','dummyStore');
         expect(res.statusCode).toBe(400);
         expect(res.body).toStrictEqual({ error: "Invalid Purchase ID" });
     });
@@ -74,17 +83,17 @@ describe('GET /getPurchaseDoc/:purchaseID (User)', () => {
         const mockPurchaseDetails = testHelper.get_sql_mock_data(testHelper.mock_data_key.PURCHASE_DETAILS.name);
         const mockProduct = testHelper.get_sql_mock_data(testHelper.mock_data_key.PRODUCT.name);
         // First DB call: get_purchase_details
-        database.query
+        mockQuery
             .mockResolvedValueOnce(mockPurchaseDetails)
             // Second DB call - get_all_products_from_ids
             .mockResolvedValueOnce(mockProduct);
 
-        getPurchaseDocHelper.getAddress.mockResolvedValue({ address_id: 'ADDR001', addr_line1: 'Street 1', addr_line2: 'Apt 5' });
-        getPurchaseDocHelper.getPayment.mockResolvedValue({payment: "Cash on Delivery", payment_id: "cod"});
-        getPurchaseDocHelper.getOrders.mockResolvedValue([{ order_id: 'OID-050825222945-ABCDEF-G8JUB9GQ', product_id: 1, quantity: 2 }]);
-        getPurchaseDocHelper.findProduct.mockReturnValue(mockProduct);
+        mockGetAddress.mockResolvedValue({ address_id: 'ADDR001', addr_line1: 'Street 1', addr_line2: 'Apt 5' });
+        mockGetPayment.mockResolvedValue({payment: "Cash on Delivery", payment_id: "cod"});
+        mockGetOrders.mockResolvedValue([{ order_id: 'OID-050825222945-ABCDEF-G8JUB9GQ', product_id: 1, quantity: 2 }]);
+        mockFindProduct.mockReturnValue(mockProduct);
 
-        const res = await request(app).get('/PURCHASE123');
+        const res = await request(app).get('/PURCHASE123').set('x-storename','dummyStore');
         expect(res.statusCode).toBe(200);
         expect(res.body.purchase_id).toBe('PURCHASE123');
         expect(res.body.signed).toBe(true);
@@ -95,9 +104,9 @@ describe('GET /getPurchaseDoc/:purchaseID (User)', () => {
             req.customer_id = 'USR001';
             next();
         });
-        database.query.mockRejectedValueOnce(new Error('DB error'));
+        mockQuery.mockRejectedValueOnce(new Error('DB error'));
 
-        const res = await request(app).get('/PURCHASE123');
+        const res = await request(app).get('/PURCHASE123').set('x-storename','dummyStore');
         expect(res.statusCode).toBe(500);
         expect(res.body).toStrictEqual({ error: 'DB error' });
     });
@@ -113,7 +122,7 @@ describe('GET /getPurchaseDoc/admin/:purchaseID (Admin)', () => {
             res.status(403).json({ message: "Authorization Token Missing" });
         });
 
-        const res = await request(app).get('/admin/PURCHASE123');
+        const res = await request(app).get('/admin/PURCHASE123').set('x-storename','dummyStore');
         expect(res.statusCode).toBe(403);
         expect(res.body).toStrictEqual({ message: "Authorization Token Missing" });
     });
@@ -123,9 +132,9 @@ describe('GET /getPurchaseDoc/admin/:purchaseID (Admin)', () => {
             req.admin_user_id = 'ADMIN001';
             next();
         });
-        database.query.mockResolvedValueOnce([]);
+        mockQuery.mockResolvedValueOnce([]);
 
-        const res = await request(app).get('/admin/INVALID_ID');
+        const res = await request(app).get('/admin/INVALID_ID').set('x-storename','dummyStore');
         expect(res.statusCode).toBe(400);
         expect(res.body).toStrictEqual({ error: "Invalid Purchase ID" });
     });
@@ -136,7 +145,7 @@ describe('GET /getPurchaseDoc/admin/:purchaseID (Admin)', () => {
             next();
         });
 
-        database.query
+        mockQuery
             .mockResolvedValueOnce([{
                 customer_id: 'USER001',
                 status: 'completed',
@@ -147,12 +156,12 @@ describe('GET /getPurchaseDoc/admin/:purchaseID (Admin)', () => {
             }])
             .mockResolvedValueOnce([{ id: 'PROD001', name: 'Sample Product' }]);
 
-        getPurchaseDocHelper.getAddress.mockResolvedValue({ id: 'ADDR001', city: 'Mumbai' });
-        getPurchaseDocHelper.getPayment.mockResolvedValue({ id: 'PAY001', method: 'COD' });
-        getPurchaseDocHelper.getOrders.mockResolvedValue([{ product_id: '1001', quantity: 2 }]);
-        getPurchaseDocHelper.findProduct.mockReturnValue({ id: '1001', name: 'Sample Product' });
+        mockGetAddress.mockResolvedValue({ id: 'ADDR001', city: 'Mumbai' });
+        mockGetPayment.mockResolvedValue({ id: 'PAY001', method: 'COD' });
+        mockGetOrders.mockResolvedValue([{ product_id: '1001', quantity: 2 }]);
+        mockFindProduct.mockReturnValue({ id: '1001', name: 'Sample Product' });
 
-        const res = await request(app).get('/admin/PURCHASE123');
+        const res = await request(app).get('/admin/PURCHASE123').set('x-storename','dummyStore');
         expect(res.statusCode).toBe(200);
         expect(res.body.purchase_id).toBe('PURCHASE123');
         expect(res.body.signed).toBe(true);
@@ -164,9 +173,9 @@ describe('GET /getPurchaseDoc/admin/:purchaseID (Admin)', () => {
             req.admin_user_id = 'ADMIN001';
             next();
         });
-        database.query.mockRejectedValueOnce(new Error('DB error'));
+        mockQuery.mockRejectedValueOnce(new Error('DB error'));
 
-        const res = await request(app).get('/admin/PURCHASE123');
+        const res = await request(app).get('/admin/PURCHASE123').set('x-storename','dummyStore');
         expect(res.statusCode).toBe(500);
         expect(res.body).toStrictEqual({ error: 'DB error' });
     });

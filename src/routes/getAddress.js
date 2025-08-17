@@ -1,9 +1,10 @@
 // routes/getAddress.js
 const express = require('express');
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const Sql = require('../resource/sql.js');
 const token = require('../internal/token');
 const AddressHelper = require('../helpers/getAddressHelper.js');
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -15,8 +16,6 @@ const router = express.Router();
  *       - User
  *     summary: Get all addresses of the authenticated customer
  *     description: Returns a list of all saved addresses for the authenticated customer. Requires Bearer token in `x-authorization` header.
- *     security:
- *       - xAuthorization: []
  *     responses:
  *       200:
  *         description: Successfully fetched user's addresses
@@ -76,16 +75,18 @@ const router = express.Router();
  *                   type: string
  *                   example: "Internal server error"
  */
-router.get('/', token.verifyAuthToken, (req, res) => {
+router.get('/', util.verifyStoreName, token.verifyAuthToken, (req, res) => {
     const customerId = req.customer_id;
+    const database = new Database(req.storename);
+    const addressHelper = new AddressHelper(database);
     database.query(Sql.get_user_address(customerId))
         .then(async result => {
-            const defaultAddress = await AddressHelper.get_default_address();
+            const defaultAddress = await addressHelper.get_default_address();
             if(!result || result.length === 0) {
                 res.status(200).json({userAddress: [], storeAddress: defaultAddress});
             }else {
                 res.status(200).json({
-                    userAddress: AddressHelper.parseUserAddress(result),
+                    userAddress: addressHelper.parseUserAddress(result),
                     storeAddress: defaultAddress
                 });
             }

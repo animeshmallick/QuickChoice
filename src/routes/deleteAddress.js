@@ -1,7 +1,8 @@
 const express = require('express');
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const Sql = require('../resource/sql.js');
 const token = require('../internal/token');
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -28,10 +29,11 @@ const router = express.Router();
  *          description: Address does not belong to the customerID
  */
 
-router.get('/:address_id', token.verifyAuthToken,
+router.get('/:address_id', util.verifyStoreName, token.verifyAuthToken,
     function (req, res, next) {
         const address = req.params.address_id;
         const customerId = req.customer_id;
+        const database = new Database(req.storename);
         database.query(Sql.check_if_address_belongs_to_customer(address, customerId))
             .then(result => {
                 if(result.length===0){

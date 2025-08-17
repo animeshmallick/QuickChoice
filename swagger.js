@@ -16,11 +16,18 @@ const options = {
                     in: 'header',
                     name: 'x-authorization',
                     description: 'Your Bearer token: Bearer <token>'
+                },
+                storeName: {
+                    type: 'apiKey',
+                    in: 'header',
+                    name: 'x-storename',
+                    description: 'Your store name header'
                 }
             }
         },
         security: [
-            { xAuthorization: [] }
+            { xAuthorization: [] },
+            { storeName : [] }
         ]
 
     },

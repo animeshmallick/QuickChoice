@@ -62,5 +62,13 @@ class Utils {
         const regex = /^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
         return regex.test(time);
     }
+    verifyStoreName(req, res, next){
+        const storeName = req.headers['x-storename'];
+        if(!storeName){
+            return res.status(403).json({message: "Store name is missing"});
+        }
+        req.storename = storeName;
+        next();
+    }
 }
 module.exports = new Utils();

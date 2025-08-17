@@ -1,7 +1,9 @@
-jest.mock('../src/internal/database', () => ({
-    query: jest.fn(),
-    end: jest.fn()
-}));
+const mockQuery = jest.fn();
+jest.mock('../src/internal/database', () =>{
+    return jest.fn().mockImplementation(() => {
+        return { query: mockQuery };
+    });
+});
 
 jest.mock('../src/internal/token', () => ({
     verifyAdminAuthToken: jest.fn()
@@ -13,7 +15,6 @@ jest.mock('../src/helpers/StoreTimingHelper', () => ({
 
 const request = require('supertest');
 const express = require('express');
-const database = require('../src/internal/database');
 const Token = require('../src/internal/token');
 const StoreTimingHelper = require('../src/helpers/StoreTimingHelper');
 const changeStoreTiming = require('../src/routes/changeStoreTiming');
@@ -24,7 +25,7 @@ app.use('/', changeStoreTiming);
 
 describe('Change Store Timing Route', () => {
     beforeEach(() => {
-        jest.clearAllMocks();
+        mockQuery.mockReset();
     });
 
     it('should return 403 if no auth token provided', async () => {
@@ -32,7 +33,7 @@ describe('Change Store Timing Route', () => {
             res.status(403).json({ message: "Authorization Token Missing" });
         });
 
-        const res = await request(app).post('/');
+        const res = await request(app).post('/').set('x-storename','dummyStore');
         expect(res.statusCode).toBe(403);
         expect(res.body).toStrictEqual({ message: "Authorization Token Missing" });
     });
@@ -43,6 +44,7 @@ describe('Change Store Timing Route', () => {
 
         const res = await request(app)
             .post('/')
+            .set('x-storename','dummyStore')
             .set('x-authorization', 'Bearer badtoken');
 
         expect(res.statusCode).toBe(401);
@@ -58,11 +60,12 @@ describe('Change Store Timing Route', () => {
 
         const res = await request(app)
             .post('/')
+            .set('x-storename','dummyStore')
             .set('x-authorization', 'Bearer validtoken')
             .send({ open_time: '09:00:00' }); // Missing close_time
         expect(res.statusCode).toBe(400);
         expect(res.body).toStrictEqual({ success: false, message: "Invalid parameters" });
-        expect(database.query).not.toHaveBeenCalled();
+        expect(mockQuery).not.toHaveBeenCalled();
     });
 
     it('should change store timings successfully (200)', async () => {
@@ -71,16 +74,17 @@ describe('Change Store Timing Route', () => {
             next();
         });
         StoreTimingHelper.validateReqParams.mockImplementation((req, res, next) => next());
-        database.query.mockResolvedValueOnce({ affectedRows: 1 });
+        mockQuery.mockResolvedValueOnce({ affectedRows: 1 });
 
         const res = await request(app)
             .post('/')
+            .set('x-storename','dummyStore')
             .set('x-authorization', 'Bearer validtoken')
             .send({ open_time: '09:00:00', close_time: '21:00:00' });
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toStrictEqual({ success: true, message: "Store timings changed successfully" });
-        expect(database.query).toHaveBeenCalledTimes(1);
+        expect(mockQuery).toHaveBeenCalledTimes(1);
     });
 
     it('should return 500 if database query fails', async () => {
@@ -89,10 +93,11 @@ describe('Change Store Timing Route', () => {
             next();
         });
         StoreTimingHelper.validateReqParams.mockImplementation((req, res, next) => next());
-        database.query.mockRejectedValueOnce(new Error('DB error'));
+        mockQuery.mockRejectedValueOnce(new Error('DB error'));
 
         const res = await request(app)
             .post('/')
+            .set('x-storename','dummyStore')
             .set('x-authorization', 'Bearer validtoken')
             .send({ open_time: '09:00:00', close_time: '21:00:00' });
 

@@ -1,6 +1,12 @@
-jest.mock('../src/internal/database', () => ({
-    query: jest.fn(),
-    end: jest.fn()
+const mockQuery = jest.fn();
+jest.mock('../src/internal/database', () =>{
+    return jest.fn().mockImplementation(() => {
+        return { query: mockQuery };
+    });
+});
+
+jest.mock('../src/utils/utils', () => ({
+    verifyStoreName: jest.fn((req, res, next) => next())
 }));
 
 jest.mock('../src/internal/token', () => ({
@@ -11,13 +17,15 @@ jest.mock('../src/resource/sql', () => ({
     get_user_purchases: jest.fn((id) => `SQL for ${id}`)
 }));
 
-jest.mock('../src/helpers/getUserPurchasesHelper', () => ({
-    parseUserPurchases: jest.fn()
-}));
+const mockParseUserPurchases = jest.fn();
+jest.mock('../src/helpers/getUserPurchasesHelper', () => {
+    return jest.fn().mockImplementation(() => {
+        return { parseUserPurchases: mockParseUserPurchases };
+    });
+});
 
 const request = require('supertest');
 const express = require('express');
-const database = require('../src/internal/database');
 const token = require('../src/internal/token');
 const Sql = require('../src/resource/sql');
 const UserPurchasesHelper = require('../src/helpers/getUserPurchasesHelper');
@@ -29,7 +37,7 @@ app.use('/', getUserPurchasesRouter);
 
 describe('GET /getUserPurchases', () => {
     beforeEach(() => {
-        jest.clearAllMocks();
+        mockQuery.mockReset();
     });
 
     it('should return 401 if token verification fails', async () => {
@@ -37,7 +45,7 @@ describe('GET /getUserPurchases', () => {
             res.status(401).json({ error: "Unauthorized" });
         });
 
-        const res = await request(app).get('/');
+        const res = await request(app).get('/').set('x-storename', 'dummyStore');
         expect(res.statusCode).toBe(401);
         expect(res.body).toStrictEqual({ error: "Unauthorized" });
     });
@@ -56,17 +64,17 @@ describe('GET /getUserPurchases', () => {
             { purchaseId: 'PURCH1', products: [{ id: 'PROD1', qty: 2 }], status: 'DELIVERED' }
         ];
 
-        database.query.mockResolvedValueOnce(mockDbResult);
-        UserPurchasesHelper.parseUserPurchases.mockResolvedValueOnce(mockParsedResult);
+        mockQuery.mockResolvedValueOnce(mockDbResult);
+        mockParseUserPurchases.mockResolvedValueOnce(mockParsedResult);
 
         const res = await request(app)
             .get('/')
+            .set('x-storename', 'dummyStore')
             .set('x-authorization', 'Bearer validtoken');
-
         expect(res.statusCode).toBe(200);
         expect(res.body).toStrictEqual(mockParsedResult);
-        expect(database.query).toHaveBeenCalledWith(Sql.get_user_purchases('USER123'));
-        expect(UserPurchasesHelper.parseUserPurchases).toHaveBeenCalledWith(mockDbResult);
+        expect(mockQuery).toHaveBeenCalledWith(Sql.get_user_purchases('USER123'));
+        expect(mockParseUserPurchases).toHaveBeenCalledWith(mockDbResult);
     });
 
     it('should return 500 if database query fails', async () => {
@@ -75,10 +83,11 @@ describe('GET /getUserPurchases', () => {
             next();
         });
 
-        database.query.mockRejectedValueOnce(new Error('DB error'));
+        mockQuery.mockRejectedValueOnce(new Error('DB error'));
 
         const res = await request(app)
             .get('/')
+            .set('x-storename', 'dummyStore')
             .set('x-authorization', 'Bearer validtoken');
 
         expect(res.statusCode).toBe(500);
@@ -92,11 +101,12 @@ describe('GET /getUserPurchases', () => {
         });
 
         const mockDbResult = [{ purchase_id: 'PURCH_ERR' }];
-        database.query.mockResolvedValueOnce(mockDbResult);
-        UserPurchasesHelper.parseUserPurchases.mockRejectedValueOnce(new Error('Parsing error'));
+        mockQuery.mockResolvedValueOnce(mockDbResult);
+        mockParseUserPurchases.mockRejectedValueOnce(new Error('Parsing error'));
 
         const res = await request(app)
             .get('/')
+            .set('x-storename', 'dummyStore')
             .set('x-authorization', 'Bearer validtoken');
 
         expect(res.statusCode).toBe(500);

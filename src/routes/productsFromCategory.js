@@ -1,7 +1,8 @@
-const database = require('../internal/database.js')
+const Database = require('../internal/database.js')
 const parseProductsPerCategory = require('../helpers/productsFromCategoryHelper.js');
 const Sql = require('../resource/sql.js');
 const express = require('express');
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -49,8 +50,9 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.get('/:category', function (req, res, next){
+router.get('/:category', util.verifyStoreName, function (req, res, next){
     const category = req.params.category;
+    const database = new Database(req.storename);
     database.query(Sql.get_products_from_category(category))
         .then(sql_response => {
             res.status(200).json(parseProductsPerCategory(sql_response));

@@ -1,7 +1,9 @@
-jest.mock('../src/internal/database', () => ({
-    query: jest.fn(),
-    end: jest.fn()
-}));
+const mockQuery = jest.fn();
+jest.mock('../src/internal/database', () =>{
+    return jest.fn().mockImplementation(() => {
+        return { query: mockQuery };
+    });
+});
 jest.mock('../src/helpers/userRegistrationHelper.js', () => ({
     isNewUser: jest.fn((req, res, next) => {
         if(typeof next === "function")
@@ -32,8 +34,7 @@ app.use('/', userRegistration);
 
 describe('User Registration Route', () => {
     beforeEach(() => {
-        database.query.mockReset();
-        database.end.mockReset();
+        jest.clearAllMocks()
     });
     const sampleData = {
         "fname": "John",
@@ -53,9 +54,10 @@ describe('User Registration Route', () => {
         const mockToken = 'mock-jwt-token';
         token.getToken.mockReturnValue(mockToken);
 
-        database.query.mockImplementation(() => Promise.resolve(mockData));
+        mockQuery.mockImplementation(() => Promise.resolve(mockData));
 
         const res = await request(app).post('/')
+            .set('x-storename', 'dummyStore')
             .send(sampleData);
 
         expect(res.status).toBe(200);
@@ -67,10 +69,11 @@ describe('User Registration Route', () => {
     it('POST / should return 400 if required fields are missing', async () => {
         const mockData = testHelper.get_sql_mock_data(testHelper.mock_data_key.INVALID_USER_REGISTRATION_DETAILS.name);
         const res = await request(app).post('/')
+            .set('x-storename', 'dummyStore')
             .send(incompleteSampleData);
 
         expect(res.status).toBe(400);
         expect(res.body).toStrictEqual(mockData);
-        expect(database.query).not.toHaveBeenCalled();
+        expect(mockQuery).not.toHaveBeenCalled();
     });
 });

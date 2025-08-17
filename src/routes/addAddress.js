@@ -1,5 +1,5 @@
 const express = require('express');
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const Sql = require('../resource/sql.js');
 const token = require('../internal/token');
 const util = require('../utils/utils.js');
@@ -13,8 +13,6 @@ const router = express.Router();
  *     tags:
  *         - User
  *     summary: Add a new address for the authenticated customer
- *     security:
- *       - xAuthorization: []
  *     requestBody:
  *       required: true
  *       content:
@@ -64,8 +62,9 @@ const router = express.Router();
  *         description: Server error
  */
 
-router.post('/', token.verifyAuthToken, (req, res) => {
+router.post('/', util.verifyStoreName, token.verifyAuthToken, (req, res) => {
     const customerId = req.customer_id;
+    const database = new Database(req.storename);
     const address = req.body;
     address.address_id = "ADDR" + util.getRamdomString(6);
     if(address.hasOwnProperty("addr_line1") && address.hasOwnProperty("addr_line2") &&

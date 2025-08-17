@@ -1,9 +1,13 @@
-const database = require('../internal/database.js');
+// const Database = require('../internal/database.js');
 const Sql = require('../resource/sql.js');
 class UserPurchasesHelper {
+    #database;
+    constructor(database) {
+        this.#database = database;
+    }
     async getAddress(address_id){
         if(address_id) {
-            const result = await database.query(Sql.get_address(address_id))
+            const result = await this.#database.query(Sql.get_address(address_id))
             if (result.length === 1) {
                 return{
                     address_id: result[0].address_id,
@@ -53,4 +57,4 @@ class UserPurchasesHelper {
     }
 }
 
-module.exports = new UserPurchasesHelper();
+module.exports = UserPurchasesHelper;

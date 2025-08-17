@@ -1,9 +1,12 @@
 const request = require('supertest');
 const express = require('express');
 
-jest.mock('../src/internal/database', () => ({
-    query: jest.fn(),
-}));
+const mockQuery = jest.fn();
+jest.mock('../src/internal/database', () =>{
+    return jest.fn().mockImplementation(() => {
+        return { query: mockQuery };
+    });
+});
 
 jest.mock('../src/internal/token', () => ({
     verifyAuthToken: jest.fn((req, res, next) => {
@@ -27,71 +30,82 @@ app.use('/', changePassword);
 
 describe('Change Password Route', () => {
     beforeEach(() => {
-        jest.clearAllMocks();
+        mockQuery.mockReset();
     });
 
     it('should return 200 when password is updated successfully', async () => {
-        database.query
+        mockQuery
             .mockResolvedValueOnce([{ password: 'oldpass' }]) // get_user_password
             .mockResolvedValueOnce({ affectedRows: 1 });       // update_user_password
 
-        const res = await request(app)
-            .post('/')
+        const res = await request(app).post('/')
+            .set('x-storename','dummyStore')
             .send({ oldPassword: 'oldpass', newPassword: 'newpass' });
 
         expect(res.status).toBe(200);
         expect(res.body).toEqual({ message: 'Password updated successfully.' });
-        expect(database.query).toHaveBeenCalledTimes(2);
+        expect(mockQuery).toHaveBeenCalledTimes(2);
     });
 
     it('should return 400 if old password is wrong', async () => {
-        database.query.mockResolvedValueOnce([{ password: 'oldpass' }]); // get_user_password
+        mockQuery.mockResolvedValueOnce([{ password: 'oldpass' }]); // get_user_password
 
         const res = await request(app)
             .post('/')
+            .set('x-storename','dummyStore')
             .send({ oldPassword: 'wrongpass', newPassword: 'newpass' });
 
         expect(res.status).toBe(400);
         expect(res.body).toEqual({ error: 'Invalid Details Entered' });
-        expect(database.query).toHaveBeenCalledTimes(1);
+        expect(mockQuery).toHaveBeenCalledTimes(1);
     });
 
     it('should return 400 if new password is same as old password', async () => {
-        database.query.mockResolvedValueOnce([{ password: 'samepass' }]); // get_user_password
+        mockQuery.mockResolvedValueOnce([{ password: 'samepass' }]); // get_user_password
 
         const res = await request(app)
             .post('/')
+            .set('x-storename','dummyStore')
             .send({ oldPassword: 'samepass', newPassword: 'samepass' });
 
         expect(res.status).toBe(400);
         expect(res.body).toEqual({ error: 'Invalid Details Entered' });
-        expect(database.query).toHaveBeenCalledTimes(1);
+        expect(mockQuery).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return 403 if store name is missing', async () => {
+        const response = await request(app).post('/').send({ oldPassword: 'samepass', newPassword: 'samepass' });
+
+        expect(response.statusCode).toBe(403);
+        expect(response.body).toEqual({ message: "Store name is missing" });
     });
 
     it('should return 500 if update_user_password throws error', async () => {
-        database.query
+        mockQuery
             .mockResolvedValueOnce([{ password: 'oldpass' }]) // get_user_password
             .mockRejectedValueOnce(new Error('DB update failed')); // update_user_password
 
         const res = await request(app)
             .post('/')
+            .set('x-storename','dummyStore')
             .send({ oldPassword: 'oldpass', newPassword: 'newpass' });
 
         expect(res.status).toBe(500);
         expect(res.body).toHaveProperty('err', 'DB update failed');
-        expect(database.query).toHaveBeenCalledTimes(2);
+        expect(mockQuery).toHaveBeenCalledTimes(2);
     });
 
     it('should return 500 if get_user_password throws error', async () => {
-        database.query.mockRejectedValueOnce(new Error('DB fetch failed'));
+        mockQuery.mockRejectedValueOnce(new Error('DB fetch failed'));
 
         const res = await request(app)
             .post('/')
+            .set('x-storename','dummyStore')
             .send({ oldPassword: 'oldpass', newPassword: 'newpass' });
 
         expect(res.status).toBe(500);
         expect(res.body).toHaveProperty('err', 'DB fetch failed');
-        expect(database.query).toHaveBeenCalledTimes(1);
+        expect(mockQuery).toHaveBeenCalledTimes(1);
     });
 
     it('should return 401 if token verification fails', async () => {
@@ -101,10 +115,11 @@ describe('Change Password Route', () => {
 
         const res = await request(app)
             .post('/')
+            .set('x-storename','dummyStore')
             .send({ oldPassword: 'oldpass', newPassword: 'newpass' });
 
         expect(res.status).toBe(401);
         expect(res.body).toEqual({ error: 'Unauthorized' });
-        expect(database.query).not.toHaveBeenCalled();
+        expect(mockQuery).not.toHaveBeenCalled();
     });
 });

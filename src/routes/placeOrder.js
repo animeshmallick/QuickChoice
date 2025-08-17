@@ -1,4 +1,4 @@
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const placeOrderHelper = require('../helpers/placeOrderHelper.js');
 const Sql = require('../resource/sql.js');
 const express = require('express');
@@ -16,8 +16,6 @@ const router = express.Router();
  *       - User
  *     summary: Place a new order
  *     description: Places a new order for the authenticated user. Validates the address, payment method, and product inventory before creating the order.
- *     security:
- *       - xAuthorization: []
  *     requestBody:
  *       required: true
  *       content:
@@ -88,7 +86,7 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.post('/', token.verifyAuthToken,
+router.post('/', util.verifyStoreName, token.verifyAuthToken,
     placeOrderHelper.verifyIsNewPurchase, placeOrderHelper.verifyAddressOwnership,
     placeOrderHelper.createOrders, placeOrderHelper.verifyPaymentMethod,
     function (req, res, next){
@@ -105,6 +103,7 @@ router.post('/', token.verifyAuthToken,
             payment_status: "PENDING",
         };
 
+        const database = new Database(req.storename);
         database.query(Sql.insertIntoOrdersTable(), [placeOrderHelper.convertOrdersToArray(purchase_doc.orders)])
             .then(result => {
                 console.log("Orders Inserted Successfully");

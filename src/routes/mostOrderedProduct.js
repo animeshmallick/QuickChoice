@@ -1,7 +1,8 @@
 const express = require('express');
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const Sql = require('../resource/sql.js');
 const token = require('../internal/token');
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -27,8 +28,9 @@ const router = express.Router();
  *                   - product_id: "1"
  */
 
-router.get('/', token.verifyAuthToken, (req, res) => {
+router.get('/', util.verifyStoreName, token.verifyAuthToken, (req, res) => {
     const customerId = req.customer_id;
+    const database = new Database(req.storename);
     database.query(Sql.get_most_ordered_product(customerId))
         .then(result => {
             console.log(result);
