@@ -209,6 +209,38 @@ class Sql {
         console.log(query);
         return query;
     }
+
+    update_user_address(customer_id, addressDetails){
+        const query = `UPDATE addresses 
+                              SET addr_line1='${addressDetails.addr_line1}', addr_line2='${addressDetails.addr_line2}', city='${addressDetails.city}', state='${addressDetails.state}', pincode='${addressDetails.pincode}' 
+                              WHERE userid='${customer_id}' AND address_id='${addressDetails.address_id}';`;
+        console.log(query);
+        return query;
+    }
+
+    get_most_ordered_product(customer_id){
+        const query = `SELECT order_id FROM purchase WHERE customer_id='${customer_id}' AND placed_on >= CURDATE() - INTERVAL  15 DAY ORDER BY placed_on DESC LIMIT 15;`
+        console.log(query);
+        return query;
+    }
+
+    get_productId_by_count_from_orderId(placeholders){
+        const query = `SELECT product_id FROM orders WHERE order_id IN (${placeholders}) GROUP BY product_id ORDER BY COUNT(order_id) DESC;`
+        console.log(query);
+        return query;
+    }
+
+    check_if_address_belongs_to_customer(address, customerId){
+        const query = `SELECT 1 FROM addresses WHERE userid = '${customerId}' AND address_id = '${address}';`
+        console.log(query);
+        return query;
+    }
+
+    delete_address_for_customer(address, customerId) {
+        const query = `DELETE FROM addresses WHERE userid = '${customerId}' AND address_id = '${address}';`
+        console.log(query);
+        return query;
+    }
 }
 
 module.exports = new Sql();
