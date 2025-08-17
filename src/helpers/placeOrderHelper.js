@@ -27,7 +27,7 @@ class PlaceOrderHelper {
         if (!req.body.hasOwnProperty('purchase_id')){
             throw new InvalidPlaceOrderRequest("Purchase ID Not Found", 400);
         }
-        if(!this.#database)
+        if(this.#database === undefined || this.#database === null)
             this.#database = new Database(req.storename);
 
         const rows = await this.#database.query(Sql.get_purchase_details(req.body.purchase_id));
