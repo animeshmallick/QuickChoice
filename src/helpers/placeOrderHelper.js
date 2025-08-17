@@ -11,6 +11,11 @@ class PlaceOrderHelper {
     #database;
     constructor() {
         this.#database = undefined;
+
+        this.verifyIsNewPurchase = this.verifyIsNewPurchase.bind(this);
+        this.verifyAddressOwnership = this.verifyAddressOwnership.bind(this);
+        this.createOrders = this.createOrders.bind(this);
+        this.verifyPaymentMethod = this.verifyPaymentMethod.bind(this);
     }
     convertOrdersToArray(orders){
         let arr = [];
@@ -30,7 +35,7 @@ class PlaceOrderHelper {
         if (!req.body.hasOwnProperty('purchase_id')){
             throw new InvalidPlaceOrderRequest("Purchase ID Not Found", 400);
         }
-        if(this.#database === undefined || this.#database === null)
+        if(!this.#database)
             this.#database = new Database(req.storename);
 
         const rows = await this.#database.query(Sql.get_purchase_details(req.body.purchase_id));
