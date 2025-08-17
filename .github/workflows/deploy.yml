@@ -1,0 +1,57 @@
+name: Test and Deploy to EC2
+
+on:
+  push:
+    branches:
+      - mainline
+      - chordline
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Jest tests
+        run: npm test
+
+      - name: Determine deployment target
+        id: set-target
+        run: |
+          if [ "${GITHUB_REF_NAME}" == "mainline" ]; then
+            echo "HOST=${{ secrets.EC2_PROD_HOST }}" >> $GITHUB_ENV
+            echo "SSH_KEY=${{ secrets.EC2_PROD_PRIVATE_KEY }}" >> $GITHUB_ENV
+          elif [ "${GITHUB_REF_NAME}" == "chordline" ]; then
+            echo "HOST=${{ secrets.EC2_QA_HOST }}" >> $GITHUB_ENV
+            echo "SSH_KEY=${{ secrets.EC2_QA_PRIVATE_KEY }}" >> $GITHUB_ENV
+          else
+            echo "No deployment for this branch."
+            exit 0
+          fi
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf "%s\n" "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+
+      - name: Deploy to EC2 and restart PM2
+        run: |
+          ssh ${{ secrets.EC2_USER }}@$HOST << EOF
+            cd QuickChoice
+            git config --global --add safe.directory QuickChoice
+            sudo git pull origin ${GITHUB_REF_NAME}
+            sudo npm install
+            sudo pm2 restart quickchoice --force
+          EOF
