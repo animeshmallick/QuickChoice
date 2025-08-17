@@ -19,7 +19,7 @@ const accessLogStream = fs.createWriteStream(path.join(logDirectory, 'access.log
 const allowedOrigins = [
     'https://www.grocerschoice.in',
     'https://qa.grocerschoice.in',
-    'http://localhost:5173'
+    'http://localhost:*'
 ];
 
 app.use((req, res, next) => {
