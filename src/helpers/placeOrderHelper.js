@@ -9,6 +9,9 @@ const getPurchaseIdHelper = require("./getPurchaseIdHelper");
 
 class PlaceOrderHelper {
     #database;
+    constructor() {
+        this.#database = undefined;
+    }
     convertOrdersToArray(orders){
         let arr = [];
         orders.forEach(order => {
