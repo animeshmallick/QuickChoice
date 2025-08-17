@@ -56,6 +56,6 @@ jobs:
             cd QuickChoice
             git config --global --add safe.directory QuickChoice
             sudo git pull origin ${GITHUB_REF_NAME}
-            sudo npm install
-            sudo pm2 restart quickchoice --force
+            npm install
+            pm2 restart quickchoice --force
           EOF
