@@ -1,8 +1,9 @@
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const token = require('../internal/token.js');
 const Sql = require('../resource/sql.js');
 const helper = require('../helpers/setDefaultAddressHelper.js');
 const express = require('express');
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -14,8 +15,6 @@ const router = express.Router();
  *     description: Updates the user's addresses so that only the specified address is marked as default (`isDefault = 1`) and all others are set to `isDefault = 0`.
  *     tags:
  *       - User
- *     security:
- *       - xAuthorization: []
  *     requestBody:
  *       required: true
  *       content:
@@ -48,8 +47,9 @@ const router = express.Router();
  *         description: Server error while updating the default address
  */
 
-router.post('/',token.verifyAuthToken, helper.verifyAddressOwnership,(req,res,next) => {
+router.post('/',util.verifyStoreName, token.verifyAuthToken, helper.verifyAddressOwnership,(req,res,next) => {
     const customer_id = req.customer_id;
+    const database = new Database(req.storename);
         database.query(Sql.set_default_address(customer_id,req.body.address_id))
         .then(result => {
                 res.status(200).json({success: true, message: "Default address changed successfully"});

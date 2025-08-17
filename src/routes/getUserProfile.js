@@ -1,7 +1,8 @@
-const database = require('../internal/database.js')
+const Database = require('../internal/database.js')
 const Sql = require('../resource/sql.js');
 const express = require('express');
 const token = require("../internal/token");
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -13,8 +14,6 @@ const router = express.Router();
  *         - User
  *     summary: Get user profile
  *     description: Fetches the user's name and phone number using the customer ID from a verified JWT token.
- *     security:
- *      - xAuthorization: []
  *     responses:
  *       200:
  *         description: Successfully fetched user profile
@@ -37,9 +36,10 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.get('/', token.verifyAuthToken, (req, res) => {
+router.get('/', util.verifyStoreName, token.verifyAuthToken, (req, res) => {
     const customerId = req.customer_id;
     console.log(`Get User Profile for CustomerID : ${customerId}`);
+    const database = new Database(req.storename);
     database.query(Sql.get_user_profile(customerId))
         .then(result => {
             console.log(`User profile fetched : ${result}`);

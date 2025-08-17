@@ -1,8 +1,9 @@
 const express = require('express');
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const Sql = require('../resource/sql.js');
 const token = require('../internal/token');
 const helper = require('../helpers/changePurchaseStatusHelper.js');
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -14,8 +15,6 @@ const router = express.Router();
  *       - Admin
  *     summary: Change the status of a purchase
  *     description: Allows an authenticated admin to update the status of a purchase order if the transition is allowed.
- *     security:
- *       - xAuthorization: []
  *     parameters:
  *       - in: path
  *         name: pid
@@ -69,12 +68,13 @@ const router = express.Router();
  *       500:
  *         description: Server or database error
  */
-router.post('/:pid/:status', token.verifyAdminAuthToken, (req, res) => {
+router.post('/:pid/:status', util.verifyStoreName, token.verifyAdminAuthToken, (req, res) => {
     console.log("Change Purchase Status Requested");
     const adminUserId = req.admin_user_id;
     const pid = req.params.pid;
     const status = req.params.status;
     console.log(`PID [${pid}] -> Status Change Requested by [${adminUserId}] to [${status}]`);
+    const database = new Database(req.storename);
     database.query(Sql.get_purchase_status(pid))
         .then(result => {
             if (result.length === 1){

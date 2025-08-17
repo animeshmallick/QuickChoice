@@ -1,7 +1,9 @@
-jest.mock('../src/internal/database', () => ({
-    query: jest.fn(),
-    end: jest.fn()
-}));
+const mockQuery = jest.fn();
+jest.mock('../src/internal/database', () =>{
+    return jest.fn().mockImplementation(() => {
+        return { query: mockQuery };
+    });
+});
 
 jest.mock('../src/internal/token', () => ({
     verifyAuthToken: jest.fn()
@@ -44,10 +46,11 @@ describe('POST /setDefaultAddress', () => {
 
     it('should return 200 when default address is updated successfully', async () => {
         Sql.set_default_address.mockReturnValueOnce('SQL QUERY');
-        database.query.mockResolvedValueOnce({ affectedRows: 1 });
+        mockQuery.mockResolvedValueOnce({ affectedRows: 1 });
 
         const res = await request(app)
             .post('/')
+            .set('x-storename', 'dummyStore')
             .set('x-authorization', 'Bearer validtoken')
             .send({ address_id: 'ADDRS1111111' });
 
@@ -57,15 +60,16 @@ describe('POST /setDefaultAddress', () => {
             message: 'Default address changed successfully'
         });
         expect(Sql.set_default_address).toHaveBeenCalledWith('CUST123', 'ADDRS1111111');
-        expect(database.query).toHaveBeenCalledWith('SQL QUERY');
+        expect(mockQuery).toHaveBeenCalledWith('SQL QUERY');
     });
 
     it('should return 400 when database query fails', async () => {
         Sql.set_default_address.mockReturnValueOnce('SQL QUERY');
-        database.query.mockRejectedValueOnce(new Error('DB error'));
+        mockQuery.mockRejectedValueOnce(new Error('DB error'));
 
         const res = await request(app)
             .post('/')
+            .set('x-storename', 'dummyStore')
             .set('x-authorization', 'Bearer validtoken')
             .send({ address_id: 'ADDRS1111111' });
 
@@ -84,10 +88,11 @@ describe('POST /setDefaultAddress', () => {
         helper.verifyAddressOwnership.mockImplementationOnce(spyOwnership);
 
         Sql.set_default_address.mockReturnValueOnce('SQL QUERY');
-        database.query.mockResolvedValueOnce({ affectedRows: 1 });
+        mockQuery.mockResolvedValueOnce({ affectedRows: 1 });
 
         await request(app)
             .post('/')
+            .set('x-storename', 'dummyStore')
             .set('x-authorization', 'Bearer validtoken')
             .send({ address_id: 'ADDRS1111111' });
 

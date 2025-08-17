@@ -1,8 +1,9 @@
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const Token = require('../internal/token.js');
 const Sql = require('../resource/sql.js');
 const express = require('express');
 const userRegistrationHelper = require("../helpers/userRegistrationHelper.js");
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -63,7 +64,7 @@ const router = express.Router();
  *         description: Internal Server Error
  */
 
-router.post('/', userRegistrationHelper.isNewUser,userRegistrationHelper.createUserId,function (req, res, next) {
+router.post('/', util.verifyStoreName, userRegistrationHelper.isNewUser,userRegistrationHelper.createUserId,function (req, res, next) {
     const userRegistrationDetails = req.body;
     if (!userRegistrationDetails.hasOwnProperty('fname') || !userRegistrationDetails.hasOwnProperty('lname') ||
         !userRegistrationDetails.hasOwnProperty('phone') || !userRegistrationDetails.hasOwnProperty('password') ||
@@ -73,6 +74,7 @@ router.post('/', userRegistrationHelper.isNewUser,userRegistrationHelper.createU
     console.log(`Generating New UserId`);
     const userid = req.userid;
     const authToken = Token.getToken(userid);
+    const database = new Database(req.storename);
     database.query(Sql.register_user(userRegistrationDetails, userid))
         .then(data => {
             res.status(200).json({message: 'User Registration Successful', authToken: authToken});

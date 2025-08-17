@@ -4,6 +4,7 @@ const express = require('express');
 const token = require('../internal/token'); // Middleware to verify token
 const helper = require('../helpers/getPurchaseIdHelper');
 const router = express.Router();
+const util = require('../utils/utils.js');
 
 /**
  * @swagger
@@ -13,8 +14,6 @@ const router = express.Router();
  *       - User
  *     summary: Generate a new Purchase ID
  *     description: Returns a unique purchase ID for the authenticated user.
- *     security:
- *       - xAuthorization: []
  *     responses:
  *       200:
  *         description: Successfully generated a purchase ID
@@ -32,7 +31,7 @@ const router = express.Router();
  *         description: Internal server error
  */
 
-router.get('/', token.verifyAuthToken, (req, res) => {
+router.get('/', util.verifyStoreName, token.verifyAuthToken, (req, res) => {
     // Return fixed payment method
     const purchaseID = helper.getPurchaseID();
     res.status(200).json({purchaseID: purchaseID});

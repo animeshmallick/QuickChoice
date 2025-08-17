@@ -1,7 +1,8 @@
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const SimilarProductsHelper = require('../helpers/similarProductsHelper.js');
 const Sql = require('../resource/sql.js');
 const express = require('express');
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -51,8 +52,9 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.get('/:productId', function (req, res, next) {
+router.get('/:productId', util.verifyStoreName, function (req, res, next) {
     const productId = Number(req.params.productId);
+    const database = new Database(req.storename);
 
     database.query(Sql.get_all_products())
         .then(sql_response => {

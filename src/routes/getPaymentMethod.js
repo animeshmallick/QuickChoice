@@ -2,6 +2,7 @@
 
 const express = require('express');
 const token = require('../internal/token'); // Middleware to verify token
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -13,8 +14,6 @@ const router = express.Router();
  *       - User
  *     summary: Get available payment methods
  *     description: Returns a list of supported payment methods for the user. Requires authentication.
- *     security:
- *       - xAuthorization: []
  *     responses:
  *       200:
  *         description: List of payment methods
@@ -36,7 +35,7 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.get('/', token.verifyAuthToken, (req, res) => {
+router.get('/', util.verifyStoreName, token.verifyAuthToken, (req, res) => {
     // Return fixed payment method
     const paymentMethod = [{id: "cod", name: "Pay on Delivery"}];
     res.status(200).json(paymentMethod);

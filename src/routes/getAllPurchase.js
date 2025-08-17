@@ -1,4 +1,4 @@
-const database = require('../internal/database');
+const Database = require('../internal/database');
 const Sql = require('../resource/sql');
 const express = require('express');
 const utils = require('../utils/utils');
@@ -23,8 +23,6 @@ const router = express.Router();
  *         schema:
  *           type: string
  *           example: "2025-07-21"
- *     security:
- *       - xAuthorization: []
  *     responses:
  *       200:
  *         description: A list of purchases for the given date
@@ -50,9 +48,10 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.get("/:date", Token.verifyAdminAuthToken, function (req, res, next) {
+router.get("/:date", utils.verifyStoreName, Token.verifyAdminAuthToken, function (req, res, next) {
     console.log("Getting All Purchase for the date : "+req.params.date);
     const date = req.params.date;
+    const database = new Database(req.storename);
     database.query(Sql.get_all_purchase(date))
         .then(async sql_response => {
             const response = await getAllPurchaseHelper.createPurchaseWrapper(sql_response);
@@ -98,9 +97,10 @@ router.get("/:date", Token.verifyAdminAuthToken, function (req, res, next) {
  *       500:
  *         description: Internal server error
  */
-router.get("/", Token.verifyAdminAuthToken, function (req, res, next) {
+router.get("/", utils.verifyStoreName, Token.verifyAdminAuthToken, function (req, res, next) {
     console.log("Getting All Purchase for the Today's date");
     const date = utils.getDateString();
+    const database = new Database(req.storename);
     database.query(Sql.get_all_purchase(date))
         .then(async sql_response => {
             const response = await getAllPurchaseHelper.createPurchaseWrapper(sql_response);
@@ -109,5 +109,5 @@ router.get("/", Token.verifyAdminAuthToken, function (req, res, next) {
         .catch(err => {
             res.status(500).json({error: err.message});
         });
-})
+});
 module.exports = router;

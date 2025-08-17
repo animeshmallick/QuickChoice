@@ -1,7 +1,9 @@
-jest.mock('../src/internal/database', () => ({
-    query: jest.fn(),
-    end: jest.fn()
-}));
+const mockQuery = jest.fn();
+jest.mock('../src/internal/database', () =>{
+    return jest.fn().mockImplementation(() => {
+        return { query: mockQuery };
+    });
+});
 
 jest.mock('../src/helpers/couponHelper', () => ({
     isValidCoupon: jest.fn()
@@ -21,7 +23,6 @@ jest.mock('../src/internal/token', () => ({
 
 const express = require('express');
 const request = require('supertest');
-const database = require('../src/internal/database');
 const { isValidCoupon } = require('../src/helpers/couponHelper');
 const Sql = require('../src/resource/sql');
 const token = require('../src/internal/token');
@@ -44,7 +45,7 @@ describe('Verify Coupon Route', () => {
             next();
         });
 
-        const response = await request(app).get('/DISCOUNT10');
+        const response = await request(app).get('/DISCOUNT10').set('x-storename','dummyStore');
         expect(response.statusCode).toBe(400);
         expect(response.body).toEqual({
             success: false,
@@ -59,7 +60,7 @@ describe('Verify Coupon Route', () => {
         });
         isValidCoupon.mockReturnValue(false);
 
-        const response = await request(app).get('/FAKECOUPON');
+        const response = await request(app).get('/FAKECOUPON').set('x-storename','dummyStore');
         expect(isValidCoupon).toHaveBeenCalledWith('FAKECOUPON');
         expect(response.statusCode).toBe(400);
         expect(response.body).toEqual({
@@ -74,13 +75,13 @@ describe('Verify Coupon Route', () => {
             next();
         });
         isValidCoupon.mockReturnValue(true);
-        database.query.mockResolvedValueOnce([{ total: 2 }]);
+        mockQuery.mockResolvedValueOnce([{ total: 2 }]);
 
-        const response = await request(app).get('/DISCOUNT10');
+        const response = await request(app).get('/DISCOUNT10').set('x-storename','dummyStore');
 
         expect(isValidCoupon).toHaveBeenCalledWith('DISCOUNT10');
         expect(Sql.get_order_count_from_customer_id).toHaveBeenCalledWith('mock_customer');
-        expect(database.query).toHaveBeenCalledWith(
+        expect(mockQuery).toHaveBeenCalledWith(
             `SELECT COUNT(*) AS total FROM purchase WHERE customer_id = 'mock_customer' AND DATE(placed_on) = CURDATE();`
         );
         expect(response.statusCode).toBe(200);
@@ -93,9 +94,9 @@ describe('Verify Coupon Route', () => {
             next();
         });
         isValidCoupon.mockReturnValue(true);
-        database.query.mockResolvedValueOnce([{ total: 0 }]);
+        mockQuery.mockResolvedValueOnce([{ total: 0 }]);
 
-        const response = await request(app).get('/DISCOUNT10');
+        const response = await request(app).get('/DISCOUNT10').set('x-storename','dummyStore');
         expect(response.statusCode).toBe(400);
         expect(response.body).toEqual({ success: false, message: ' Unsuccessful' });
     });
@@ -106,9 +107,9 @@ describe('Verify Coupon Route', () => {
             next();
         });
         isValidCoupon.mockReturnValue(true);
-        database.query.mockRejectedValueOnce('DB Error');
+        mockQuery.mockRejectedValueOnce('DB Error');
 
-        const response = await request(app).get('/DISCOUNT10');
+        const response = await request(app).get('/DISCOUNT10').set('x-storename','dummyStore');
         expect(response.statusCode).toBe(500);
         expect(response.body).toEqual({ success: false, error: 'DB Error' });
     });

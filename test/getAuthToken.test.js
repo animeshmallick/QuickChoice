@@ -21,7 +21,7 @@ describe('Get AuthToken Route', () => {
         const mockToken = 'mock-guest-token';
         token.getToken.mockReturnValue(mockToken);
 
-        const res = await request(app).get('/');
+        const res = await request(app).get('/').set('x-storename','dummyStore');
 
         expect(res.status).toBe(200);
         expect(res.body).toEqual({ auth_token: mockToken });

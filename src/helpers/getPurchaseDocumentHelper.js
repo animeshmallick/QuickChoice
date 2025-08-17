@@ -1,6 +1,9 @@
-const database = require('../internal/database.js');
 const Sql = require('../resource/sql.js');
 class GetPurchaseDocumentHelper {
+    #database;
+    constructor(database) {
+        this.#database = database;
+    }
     async getAddress(address_id){
         return database.query(Sql.get_address(address_id))
             .then(result => {
@@ -44,4 +47,4 @@ class GetPurchaseDocumentHelper {
         return {product: "Not Found"};
     }
 }
-module.exports = new GetPurchaseDocumentHelper();
+module.exports = GetPurchaseDocumentHelper;

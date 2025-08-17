@@ -1,8 +1,9 @@
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const Token = require('../internal/token.js');
 const Sql = require('../resource/sql.js');
 const StoreTimingHelper = require('../helpers/StoreTimingHelper.js');
 const express = require('express');
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -14,8 +15,6 @@ const router = express.Router();
  *     description: Allows an authenticated admin to change the store's opening and closing times.
  *     tags:
  *       - Admin
- *     security:
- *       - xAuthorization: []
  *     requestBody:
  *       required: true
  *       content:
@@ -54,8 +53,9 @@ const router = express.Router();
  *         description: Internal server error
  */
 
-router.post('/',Token.verifyAdminAuthToken,StoreTimingHelper.validateReqParams,(req, res, next) => {
+router.post('/',util.verifyStoreName, Token.verifyAdminAuthToken,StoreTimingHelper.validateReqParams,(req, res, next) => {
     const isAdmin = req.admin_user_id;
+    const database = new Database(req.storename);
     if (isAdmin && req.body.hasOwnProperty('open_time') && req.body.hasOwnProperty('close_time')) {
         database.query(Sql.change_store_timings(req.body.open_time,req.body.close_time))
             .then((result) => {

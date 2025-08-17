@@ -1,9 +1,9 @@
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const Sql = require('../resource/sql.js');
 const express = require('express');
 const token = require('../internal/token');
-const getPurchaseDocHelper = require('../helpers/getPurchaseDocumentHelper.js');
-const util = require("../utils/utils");
+const GetPurchaseDocHelper = require('../helpers/getPurchaseDocumentHelper.js');
+const util = require("../utils/utils.js");
 
 const router = express.Router();
 
@@ -15,8 +15,6 @@ const router = express.Router();
  *       - User
  *     summary: Get the purchase document for a user
  *     description: Retrieve a signed purchase document with product, address, and payment info for the authenticated user.
- *     security:
- *       - xAuthorization: []
  *     parameters:
  *       - in: path
  *         name: purchaseID
@@ -63,9 +61,11 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.get("/:purchaseID", token.verifyAuthToken, (req, res, next) => {
+router.get("/:purchaseID", util.verifyStoreName, token.verifyAuthToken, (req, res, next) => {
     const customerId = req.customer_id;
     const purchaseID = req.params.purchaseID;
+    const database = new Database(req.storename);
+    const getPurchaseDocHelper = new GetPurchaseDocHelper(database);
     let purchase_doc = {
         customer_id: customerId,
         signed: false,
@@ -118,8 +118,6 @@ router.get("/:purchaseID", token.verifyAuthToken, (req, res, next) => {
  *       - Admin
  *     summary: Get the purchase document details for an authenticatd admin
  *     description: Retrieve full purchase document details for admin including customer info.
- *     security:
- *       - xAuthorization: []
  *     parameters:
  *       - in: path
  *         name: purchaseID
@@ -164,12 +162,14 @@ router.get("/:purchaseID", token.verifyAuthToken, (req, res, next) => {
  *       500:
  *         description: Server error
  */
-router.get("/admin/:purchaseID", token.verifyAdminAuthToken, (req, res, next) => {
+router.get("/admin/:purchaseID", util.verifyStoreName, token.verifyAdminAuthToken, (req, res, next) => {
     const purchaseID = req.params.purchaseID;
     let purchase_doc = {
         signed: false,
         purchase_id: purchaseID
     };
+    const database = new Database(req.storename);
+    const getPurchaseDocHelper = new GetPurchaseDocHelper(database);
     database.query(Sql.get_purchase_details(purchaseID))
         .then(async sql_response => {
             if (sql_response.length === 1) {

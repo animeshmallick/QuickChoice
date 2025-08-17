@@ -1,7 +1,8 @@
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const CategoryHelper = require('../helpers/categoriesHelper.js');
 const Sql = require('../resource/sql.js');
 const express = require('express');
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -46,7 +47,8 @@ const router = express.Router();
  *                   type: string
  *                   example: "Internal server error"
  */
-router.get('/', function (req, res, next){
+router.get('/', util.verifyStoreName, function (req, res, next){
+    const database = new Database(req.storename);
     database.query(Sql.get_all_products())
         .then(result => {
             res.status(200).json(CategoryHelper.parseCategoryResult(result));

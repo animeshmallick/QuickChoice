@@ -19,9 +19,12 @@ jest.mock('../src/helpers/placeOrderHelper.js', () => ({
     getInsertablePurchaseDoc: jest.fn(() => ({ purchase_id: 'PURCHASE123' })),
 }));
 
-jest.mock('../src/internal/database.js', () => ({
-    query: jest.fn(),
-}));
+const mockQuery = jest.fn();
+jest.mock('../src/internal/database', () =>{
+    return jest.fn().mockImplementation(() => {
+        return { query: mockQuery };
+    });
+});
 
 jest.mock('../src/resource/sql.js', () => ({
     insertIntoOrdersTable: jest.fn(() => 'INSERT_ORDERS'),
@@ -31,6 +34,7 @@ jest.mock('../src/resource/sql.js', () => ({
 
 jest.mock('../src/utils/utils.js', () => ({
     getDateTimeStringFormatted: jest.fn(() => '2025-08-13 12:00:00'),
+    verifyStoreName: jest.fn((req, res, next) => next()),
 }));
 
 const database = require('../src/internal/database.js');
@@ -53,27 +57,29 @@ describe('Place Order Route', () => {
     });
 
     it('should place an order successfully (201)', async () => {
-        database.query
+        mockQuery
             .mockResolvedValueOnce({}) // insert orders success
             .mockResolvedValueOnce({}) // reduce inventory success
             .mockResolvedValueOnce({}); // insert purchase success
 
         const res = await request(app)
             .post('/')
+            .set('x-storename', 'dummyStore')
             .send(samplePurchaseDoc);
 
         expect(res.status).toBe(201);
         expect(res.body.status).toBe(PurchaseStatus.PLACED);
         expect(res.body.inventory_reduced).toBe(true);
-        expect(database.query).toHaveBeenCalledTimes(3);
+        expect(mockQuery).toHaveBeenCalledTimes(3);
     });
     it('should return 206 if inventory reduction fails', async () => {
-        database.query
+        mockQuery
             .mockResolvedValueOnce({}) // insert orders success
             .mockRejectedValueOnce(new Error('Inventory fail')); // reduce inventory fail
 
         const res = await request(app)
             .post('/')
+            .set('x-storename', 'dummyStore')
             .send(samplePurchaseDoc);
 
         expect(res.status).toBe(206);
@@ -81,23 +87,25 @@ describe('Place Order Route', () => {
     });
 
     it('should return 500 if order insert fails', async () => {
-        database.query.mockRejectedValueOnce(new Error('Order insert fail'));
+        mockQuery.mockRejectedValueOnce(new Error('Order insert fail'));
 
         const res = await request(app)
             .post('/')
+            .set('x-storename', 'dummyStore')
             .send(samplePurchaseDoc);
 
         expect(res.status).toBe(500);
         expect(res.body.error).toBe('Order insert fail');
     });
     it('should return 500 if purchase insert fails', async () => {
-        database.query
+        mockQuery
             .mockResolvedValueOnce({}) // insert orders success
             .mockResolvedValueOnce({}) // reduce inventory success
             .mockRejectedValueOnce(new Error('Purchase insert fail')); // insert purchase fail
 
         const res = await request(app)
             .post('/')
+            .set('x-storename', 'dummyStore')
             .send(samplePurchaseDoc);
 
         expect(res.status).toBe(500);

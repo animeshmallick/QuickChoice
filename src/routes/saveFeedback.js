@@ -1,8 +1,9 @@
-const database = require("../internal/database");
+const Database = require("../internal/database");
 const Sql = require("../resource/sql");
 const token = require('../internal/token');
 const express = require("express");
 const {removeDuplicatePayloads} = require('../helpers/saveFeedbackHelper.js');
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -57,7 +58,7 @@ const router = express.Router();
  */
 
 
-router.post('/', token.verifyAuthToken, function (req, res, next) {
+router.post('/', util.verifyStoreName, token.verifyAuthToken, function (req, res, next) {
     console.log(`Accessing save feedback router by ${req.customer_id}`);
     const payloads =req.body;
     const distinctpayloads = removeDuplicatePayloads(payloads);
@@ -71,6 +72,7 @@ router.post('/', token.verifyAuthToken, function (req, res, next) {
 
         const new_rating = payload.rating;
         const productId = payload.id;
+        const database = new Database(req.storename);
 
         return database.query(Sql.get_product_from_productId(productId))
             .then(result => {

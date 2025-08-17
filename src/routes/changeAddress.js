@@ -1,7 +1,8 @@
 const express = require('express');
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const Sql = require('../resource/sql.js');
 const token = require('../internal/token');
+const util = require('../utils/utils.js');
 
 
 const router = express.Router();
@@ -14,8 +15,6 @@ const router = express.Router();
  *     description: Allows an authenticated user to update one of their saved addresses by providing address details.
  *     tags:
  *       - User
- *     security:
- *       - xAuthorization: []
  *     requestBody:
  *       required: true
  *       content:
@@ -71,9 +70,10 @@ const router = express.Router();
  *         description: Server error during address update.
  */
 
-router.post('/', token.verifyAuthToken, (req, res) => {
+router.post('/', util.verifyStoreName, token.verifyAuthToken, (req, res) => {
     const customerId = req.customer_id;
     const addressDetails = req.body;
+    const database = new Database(req.storename);
     if(!customerId || !addressDetails.address_id || !addressDetails.address_label ||
         !addressDetails.addr_line1 || !addressDetails.addr_line2 || !addressDetails.city ||
         !addressDetails.city || !addressDetails.pincode || !addressDetails.state){

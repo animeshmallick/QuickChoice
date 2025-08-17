@@ -1,11 +1,14 @@
 // helpers/getAddressHelper.js
-const database = require('../internal/database.js');
 const Sql = require('../resource/sql.js');
 
 class AddressHelper {
+    #database;
+    constructor(database) {
+        this.#database = database;
+    }
     async get_default_address(){
         let defaultAddress = {};
-        const rows = await database.query(Sql.get_store_address());
+        const rows = await this.#database.query(Sql.get_store_address());
             if(rows.length === 1){
                 defaultAddress = {
                     store_name: rows[0].store_name,
@@ -37,4 +40,4 @@ class AddressHelper {
     }
 }
 
-module.exports = new AddressHelper();
+module.exports = AddressHelper;

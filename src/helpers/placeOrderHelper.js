@@ -1,4 +1,4 @@
-const database = require("../internal/database");
+const Database = require("../internal/database");
 const Sql = require("../resource/sql");
 const InvalidPlaceOrderRequest = require("../exception/InvalidPlaceOrderRequest");
 const AddressOwnershipException = require("../exception/AddressOwnershipException");
@@ -8,6 +8,7 @@ const cartHelper = require("./cart");
 const getPurchaseIdHelper = require("./getPurchaseIdHelper");
 
 class PlaceOrderHelper {
+    #database;
     convertOrdersToArray(orders){
         let arr = [];
         orders.forEach(order => {
@@ -26,7 +27,10 @@ class PlaceOrderHelper {
         if (!req.body.hasOwnProperty('purchase_id')){
             throw new InvalidPlaceOrderRequest("Purchase ID Not Found", 400);
         }
-        const rows = await database.query(Sql.get_purchase_details(req.body.purchase_id));
+        if(!this.#database)
+            this.#database = new Database(req.storename);
+
+        const rows = await this.#database.query(Sql.get_purchase_details(req.body.purchase_id));
         if (rows.length === 0) {
             console.log("Unique Purchase ID : VERIFIED");
             req.purchase_id = req.body.purchase_id;
@@ -42,7 +46,7 @@ class PlaceOrderHelper {
             return;
         }
         try {
-            const rows = await database.query(Sql.verify_address_belong_to_user(req.customer_id, req.body.address));
+            const rows = await this.#database.query(Sql.verify_address_belong_to_user(req.customer_id, req.body.address));
             if (rows.length === 0) {
                 throw new AddressOwnershipException("Address Ownership failed",400);
             }
@@ -58,7 +62,7 @@ class PlaceOrderHelper {
             throw new InvalidPlaceOrderRequest("Invalid Place Order Request", 400);
         }else {
             const productMap = cartHelper.getProductMap(req.body.cart);
-            database.query(Sql.get_all_products_in_stock_from_ids(Object.keys(productMap)))
+            this.#database.query(Sql.get_all_products_in_stock_from_ids(Object.keys(productMap)))
                 .then(result => {
                     const orders = [];
                     result.forEach(product => {

@@ -1,8 +1,8 @@
 const express = require('express');
-const database = require('../internal/database.js');
+const Database = require('../internal/database.js');
 const Sql = require('../resource/sql.js');
 const token = require('../internal/token');
-
+const util = require('../utils/utils.js');
 
 const router = express.Router();
 
@@ -14,8 +14,6 @@ const router = express.Router();
  *     description: Allows an authenticated user to change their password by providing the old and new password.
  *     tags:
  *       - User
- *     security:
- *       - xAuthorization: []
  *     requestBody:
  *       required: true
  *       content:
@@ -51,10 +49,11 @@ const router = express.Router();
  *         description: Server error during password update.
  */
 
-router.post('/', token.verifyAuthToken, (req, res) => {
+router.post('/', util.verifyStoreName, token.verifyAuthToken, (req, res) => {
     const customerId = req.customer_id;
     const oldPassword = req.body.oldPassword;
     const newPassword = req.body.newPassword;
+    const database = new Database(req.storename);
     database.query(Sql.get_user_password(customerId))
     .then(result => {
         if (result && result.length === 1) {

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const token = require('../internal/token');
+const util = require('../utils/utils.js');
 
 
 /**
@@ -35,8 +36,6 @@ router.get('/', (req, res) =>{
  *       - Admin
  *     summary: Ping backend server
  *     description: Returns a success message to confirm the backend is reachable. Requires admin authentication.
- *     security:
- *       - xAuthorization: []
  *     responses:
  *       200:
  *         description: To check if the backend server is running
@@ -50,7 +49,7 @@ router.get('/', (req, res) =>{
  *                   example: Ping From Backend Server
  */
 
-router.post('/', token.verifyAdminAuthToken, (req, res, next) => {
+router.post('/', util.verifyStoreName, token.verifyAdminAuthToken, (req, res, next) => {
     res.status(200).json({"message": "Ping From Backend Server", "user": req.admin_user_id});
 });
 module.exports = router;

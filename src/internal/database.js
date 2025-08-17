@@ -3,12 +3,12 @@ const mysql = require("mysql2/promise");
 class Database {
     #pool;
 
-    constructor() {
+    constructor(storename) {
         this.#pool = mysql.createPool({
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
+            database: storename || 'dummyStore',
             waitForConnections: true,
             connectionLimit: 10,
             queueLimit: 0
@@ -25,4 +25,4 @@ class Database {
     }
 }
 
-module.exports = new Database();
+module.exports = Database;

@@ -1,8 +1,9 @@
-jest.mock('../src/internal/database', () => ({
-    query: jest.fn(),
-    end: jest.fn()
-}));
-
+const mockQuery = jest.fn();
+jest.mock('../src/internal/database', () =>{
+    return jest.fn().mockImplementation(() => {
+        return { query: mockQuery };
+    });
+});
 jest.mock('../src/internal/token', () => ({
     verifyAdminAuthToken: jest.fn()
 }));
@@ -12,7 +13,8 @@ jest.mock('../src/helpers/getAllPurchase', () => ({
 }));
 
 jest.mock('../src/utils/utils', () => ({
-    getDateString: jest.fn()
+    getDateString: jest.fn(),
+    verifyStoreName: jest.fn((req, res, next) => next())
 }));
 
 jest.mock('../src/resource/sql', () => ({
@@ -21,7 +23,6 @@ jest.mock('../src/resource/sql', () => ({
 
 const request = require('supertest');
 const express = require('express');
-const database = require('../src/internal/database');
 const Token = require('../src/internal/token');
 const getAllPurchaseHelper = require('../src/helpers/getAllPurchase');
 const utils = require('../src/utils/utils');
@@ -34,7 +35,7 @@ app.use('/', getAllPurchaseRouter);
 
 describe('GET /getAllPurchase', () => {
     beforeEach(() => {
-        jest.clearAllMocks();
+        mockQuery.mockReset();
     });
 
     it('should return 403 if no admin auth token provided', async () => {
@@ -42,7 +43,7 @@ describe('GET /getAllPurchase', () => {
             res.status(403).json({ message: "Authorization Token Missing" });
         });
 
-        const res = await request(app).get('/');
+        const res = await request(app).get('/').set('x-storename','dummyStore');
         expect(res.statusCode).toBe(403);
         expect(res.body).toStrictEqual({ message: "Authorization Token Missing" });
     });
@@ -54,6 +55,7 @@ describe('GET /getAllPurchase', () => {
 
         const res = await request(app)
             .get('/')
+            .set('x-storename','dummyStore')
             .set('x-authorization', 'Bearer badtoken');
 
         expect(res.statusCode).toBe(401);
@@ -67,16 +69,17 @@ describe('GET /getAllPurchase', () => {
         });
 
         utils.getDateString.mockReturnValue('2025-08-14');
-        database.query.mockResolvedValueOnce([{ purchase_id: 'P001' }]);
+        mockQuery.mockResolvedValueOnce([{ purchase_id: 'P001' }]);
         getAllPurchaseHelper.createPurchaseWrapper.mockResolvedValueOnce([{ purchaseId: 'P001', total: 100 }]);
 
         const res = await request(app)
             .get('/')
+            .set('x-storename','dummyStore')
             .set('x-authorization', 'Bearer validtoken');
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toStrictEqual([{ purchaseId: 'P001', total: 100 }]);
-        expect(database.query).toHaveBeenCalledWith(Sql.get_all_purchase('2025-08-14'));
+        expect(mockQuery).toHaveBeenCalledWith(Sql.get_all_purchase('2025-08-14'));
     });
 
     it('should return purchases for a given date successfully (200)', async () => {
@@ -85,16 +88,17 @@ describe('GET /getAllPurchase', () => {
             next();
         });
 
-        database.query.mockResolvedValueOnce([{ purchase_id: 'P002' }]);
+        mockQuery.mockResolvedValueOnce([{ purchase_id: 'P002' }]);
         getAllPurchaseHelper.createPurchaseWrapper.mockResolvedValueOnce([{ purchaseId: 'P002', total: 200 }]);
 
         const res = await request(app)
             .get('/2025-08-01')
+            .set('x-storename','dummyStore')
             .set('x-authorization', 'Bearer validtoken');
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toStrictEqual([{ purchaseId: 'P002', total: 200 }]);
-        expect(database.query).toHaveBeenCalledWith(Sql.get_all_purchase('2025-08-01'));
+        expect(mockQuery).toHaveBeenCalledWith(Sql.get_all_purchase('2025-08-01'));
     });
 
     it('should return 500 if database query fails', async () => {
@@ -104,10 +108,11 @@ describe('GET /getAllPurchase', () => {
         });
 
         utils.getDateString.mockReturnValue('2025-08-14');
-        database.query.mockRejectedValueOnce(new Error('DB error'));
+        mockQuery.mockRejectedValueOnce(new Error('DB error'));
 
         const res = await request(app)
             .get('/')
+            .set('x-storename','dummyStore')
             .set('x-authorization', 'Bearer validtoken');
 
         expect(res.statusCode).toBe(500);
