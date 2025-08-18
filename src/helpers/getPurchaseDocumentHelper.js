@@ -5,7 +5,7 @@ class GetPurchaseDocumentHelper {
         this.#database = database;
     }
     async getAddress(address_id){
-        return database.query(Sql.get_address(address_id))
+        return this.#database.query(Sql.get_address(address_id))
             .then(result => {
                 if(result.length === 1) {
                     return {
@@ -29,7 +29,7 @@ class GetPurchaseDocumentHelper {
         const order_ids = orders.split("&&");
         let order_wrapper = [];
 
-        const orders_from_sql = await database.query(Sql.get_orders(order_ids));
+        const orders_from_sql = await this.#database.query(Sql.get_orders(order_ids));
         for(const order of orders_from_sql){
             order_wrapper.push({
                 order_id: order.order_id,
