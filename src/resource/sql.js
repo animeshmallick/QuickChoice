@@ -243,6 +243,24 @@ class Sql {
         console.log(query);
         return query;
     }
+
+    get_all_purchase_dates_for_customer(customerId){
+        const query=`SELECT DISTINCT DATE(placed_on) AS purchase_date FROM purchase WHERE customer_id = '${customerId}' ORDER BY purchase_date DESC;`
+        console.log(query);
+        return query;
+    }
+
+    set_happy_hours_for_product_ids(ids){
+        const query=`UPDATE products SET happy_hours=1 WHERE id IN (${ids});`
+        console.log(query);
+        return query;
+    }
+
+    delete_happy_hours() {
+        const query=`UPDATE products SET happy_hours=0;`
+        console.log(query);
+        return query;
+    }
 }
 
 module.exports = new Sql();

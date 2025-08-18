@@ -20,28 +20,35 @@ const router = express.Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   product_id:
+ *                     type: string
  *               example:
- *                   - product_id: "18"
- *                   - product_id: "9"
- *                   - product_id: "2"
- *                   - product_id: "1"
+ *                 - product_id: "18"
+ *                 - product_id: "9"
+ *                 - product_id: "2"
+ *                 - product_id: "1"
+ *       500:
+ *         description: Internal server error
  */
+
 
 router.get('/', util.verifyStoreName, token.verifyAuthToken, (req, res) => {
     const customerId = req.customer_id;
     const database = new Database(req.storename);
     database.query(Sql.get_most_ordered_product(customerId))
         .then(result => {
-            console.log(result);
             const flatresult = result.flatMap(item=>item.order_id.split('&&'));
-            console.log(flatresult);
             const placeholders = flatresult.map(() => '?').join(',');
             database.query(Sql.get_productId_by_count_from_orderId(placeholders), flatresult)
                 .then(result => {
-                    console.log('Product count:', result);
+                    console.log(`${result.length} items are most ordered by the customer ${customerId}`);
                     res.status(200).json(result);
                 });
-        });
+        })
+        .catch(err => res.status(500).json({error : err}));
 });
 module.exports = router;

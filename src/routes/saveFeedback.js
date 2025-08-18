@@ -54,6 +54,8 @@ const router = express.Router();
  *                       message:
  *                          type: string
  *                          example: "Feedback updated"
+ *      500:
+ *         description: Internal server error
  *
  */
 
@@ -83,9 +85,11 @@ router.post('/', util.verifyStoreName, token.verifyAuthToken, function (req, res
                             console.log(`Feedback updated for Product ID: ${productId} with rating ${new_rating} *`);
                             return {id: productId, status: true, message: "Feedback updated"};
                         })
+                        .catch(err => res.status(500).json({error : err}));
                 } else
                     return {id: productId, status: false, message: "Invalid ProductId"};
             })
+            .catch(err => res.status(500).json({error : err}));
     });
     Promise.all(tasks).then(results => res.status(200).json({ status:updatedCount>0,
         message:`${updatedCount} out of ${distinctpayloads.length} product feedback updated`}));
