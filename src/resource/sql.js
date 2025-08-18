@@ -80,12 +80,14 @@ class Sql {
         
         return query;
     }
-    insertIntoOrdersTable(){
-        const query = "INSERT INTO orders (order_id,product_id,quantity) VALUES ?";
+    insertIntoOrdersTable(rowsCount){
+        const values = Array(rowsCount).fill("(?, ?, ?)").join(", ");
+        const query = `INSERT INTO orders (order_id,product_id,quantity) VALUES ${values}`;
         return query;
     }
-    reduceInventory() {
-        const query = `UPDATE products SET stock = stock - 1 WHERE id in (?)`;
+    reduceInventory(count) {
+        const ids = Array(count).fill('?').join(', ');
+        const query = `UPDATE products SET stock = stock - 1 WHERE id in (${ids})`;
         return query;
     }
     verify_address_belong_to_user(userId,address){
@@ -93,7 +95,7 @@ class Sql {
         return query;
     }
     insertIntoPurchaseTable(){
-        const query = "INSERT INTO purchase (purchase_id, customer_id, address_id, order_id, status, payment_id, store_pickup) VALUES ?";
+        const query = `INSERT INTO purchase (purchase_id, customer_id, address_id, order_id, status, payment_id, store_pickup) VALUES (?, ?, ?, ?, ?, ?, ?)`;
         return query;
     }
     get_purchase_details(pid){

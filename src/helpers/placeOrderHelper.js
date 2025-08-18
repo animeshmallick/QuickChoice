@@ -20,7 +20,7 @@ class PlaceOrderHelper {
     convertOrdersToArray(orders){
         let arr = [];
         orders.forEach(order => {
-            arr.push([order.orderID, order.product_id, order.quantity]);
+            arr.push(order.orderID, order.product_id, order.quantity);
         });
         return arr;
     }

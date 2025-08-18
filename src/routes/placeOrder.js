@@ -104,17 +104,17 @@ router.post('/', util.verifyStoreName, token.verifyAuthToken,
         };
 
         const database = new Database(req.storename);
-        database.query(Sql.insertIntoOrdersTable(), [placeOrderHelper.convertOrdersToArray(purchase_doc.orders)])
+        database.query(Sql.insertIntoOrdersTable(purchase_doc.orders.length), placeOrderHelper.convertOrdersToArray(purchase_doc.orders))
             .then(result => {
                 console.log("Orders Inserted Successfully");
                 purchase_doc.message = `Order Placed Successfully`;
-                database.query(Sql.reduceInventory(), [placeOrderHelper.convertProductIdToArray(purchase_doc.orders)])
+                database.query(Sql.reduceInventory(purchase_doc.orders.length), placeOrderHelper.convertProductIdToArray(purchase_doc.orders))
                     .then(result => {
                         purchase_doc.inventory_reduced = true;
                         purchase_doc.status = PurchaseStatus.PLACED;
                         console.log("Inventory Reduced Successfully");
                         database.query(Sql.insertIntoPurchaseTable(),
-                            [[placeOrderHelper.getInsertablePurchaseDoc(purchase_doc)]])
+                            placeOrderHelper.getInsertablePurchaseDoc(purchase_doc))
                             .then(result => {
                                 purchase_doc.signed = true;
                                 purchase_doc.placedAt = util.getDateTimeStringFormatted();
