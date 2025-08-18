@@ -27,6 +27,8 @@ const router = express.Router();
  *         description: Address deleted successfully
  *       400:
  *          description: Address does not belong to the customerID
+ *       500:
+ *          description: Internal Server Error
  */
 
 router.get('/:address_id', util.verifyStoreName, token.verifyAuthToken,
@@ -45,7 +47,8 @@ router.get('/:address_id', util.verifyStoreName, token.verifyAuthToken,
                         console.log(`Address ID ${address} successfully deleted for customer ID ${customerId}`);
                         res.status(200).json({status:true, message: "Address successfully deleted"})
                     })
-
+                    .catch(err => res.status(500).json({error : err}));
             })
+            .catch(err => res.status(500).json({error : err}));
     });
 module.exports = router;

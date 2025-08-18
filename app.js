@@ -84,6 +84,9 @@ app.use('/saveFeedback', require('./src/routes/saveFeedback'));
 app.use('/changeAddress', require('./src/routes/changeAddress'));
 app.use('/mostOrderedProduct', require('./src/routes/mostOrderedProduct'));
 app.use('/deleteAddress', require('./src/routes/deleteAddress'));
+app.use('/getStreakCount', require('./src/routes/getStreakCount'));
+app.use('/setHappyHoursProduct', require('./src/routes/setHappyHoursProduct'));
+app.use('/deleteHappyHour', require('./src/routes/deleteHappyHour'));
 
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
