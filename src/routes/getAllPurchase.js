@@ -54,7 +54,7 @@ router.get("/:date", utils.verifyStoreName, Token.verifyAdminAuthToken, function
     const database = new Database(req.storename);
     database.query(Sql.get_all_purchase(date))
         .then(async sql_response => {
-            const response = await getAllPurchaseHelper.createPurchaseWrapper(sql_response);
+            const response = await getAllPurchaseHelper.createPurchaseWrapper(database, req.storename, sql_response);
             res.status(200).json(response);
         })
         .catch(err => {
@@ -70,8 +70,6 @@ router.get("/:date", utils.verifyStoreName, Token.verifyAdminAuthToken, function
  *       - Admin
  *     summary: Get today's purchases
  *     description: Returns a list of all purchases for today. Requires admin authorization.
- *     security:
- *       - xAuthorization: []
  *     responses:
  *       200:
  *         description: A list of today's purchases
@@ -103,7 +101,7 @@ router.get("/", utils.verifyStoreName, Token.verifyAdminAuthToken, function (req
     const database = new Database(req.storename);
     database.query(Sql.get_all_purchase(date))
         .then(async sql_response => {
-            const response = await getAllPurchaseHelper.createPurchaseWrapper(sql_response);
+            const response = await getAllPurchaseHelper.createPurchaseWrapper(database, req.storename, sql_response);
             res.status(200).json(response);
         })
         .catch(err => {
