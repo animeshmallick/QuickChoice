@@ -1,4 +1,3 @@
-const database = require('../internal/database');
 const Sql = require('../resource/sql');
 class Utils {
     getDateTimeString(){
@@ -27,28 +26,6 @@ class Utils {
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const yy = String(now.getFullYear()).slice(-2);
         return `${dd}${mm}${yy}`;
-    }
-    async getPhoneNumber(userid) {
-        return database.query(Sql.get_user_phoneNumber_query(), [userid])
-            .then(result => {
-                return result[0]?.phone || 'N/A';
-            })
-            .catch(err => {
-                console.error("Error executing SQL query:", err);
-                return 'Error';
-            });
-    }
-
-    async getAddressFormatted(address_id){
-        return database.query(Sql.get_user_address_query(), [address_id])
-            .then(result => {
-                const address = result[0];
-                return address ? `${address.addr_line1} || ${address.addr_line2}` : 'N/A';
-            })
-            .catch(err => {
-                console.error("Error executing SQL query:", err);
-                return 'Error';
-            });
     }
     getRamdomString(length = 8){
         return Math.random().toString(36).substring(2, length + 2).toUpperCase();
