@@ -9,12 +9,12 @@ const router = express.Router();
 
 /**
  * @swagger
- * /setHappyHoursProduct:
+ * /setFeaturedProduct:
  *   post:
  *     tags:
  *       - Admin
- *     summary: Set happy hours for productId
- *     description: Accepts a list of ProductID and set the Ids with Happy hours.
+ *     summary: Set featured product for productId
+ *     description: Accepts a list of ProductID and set the Ids with Featured product.
  *     requestBody:
  *       required: true
  *       content:
@@ -30,7 +30,7 @@ const router = express.Router();
  *                   description: ID of the product
  *     responses:
  *      200:
- *         description: Happy hours successfully updated
+ *         description: Featured product successfully updated
  *      400:
  *         description: Invalid Parameters
  *      500:
@@ -47,9 +47,9 @@ router.post('/', util.verifyStoreName, Token.verifyAdminAuthToken, function (req
         }
     });
     const ids=payload.map(row=>row.id).filter(id=>id!==null && id!== undefined && id!=='');
-    database.query(Sql.set_happy_hours_for_product_ids(ids))
+    database.query(Sql.set_featured_product_for_product_ids(ids))
         .then(result =>{
-            res.status(200).json({status:true, message: "Happyhours updated for productid"});
+            res.status(200).json({status:true, message: "Featured product updated for productid"});
         })
         .catch(err => res.status(500).json({error : err}));
 });

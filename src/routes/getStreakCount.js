@@ -28,11 +28,12 @@ const router = express.Router();
  *          description: Internal Server Error
  */
 
-router.get('/', util.verifyStoreName, token.verifyAuthToken, (req, res) => {
+router.get('/', util.verifyStoreName, token.verifyAuthToken,  (req, res) => {
     const customerId = req.customer_id;
     const database = new Database(req.storename);
     database.query(Sql.get_all_purchase_dates_for_customer(customerId))
         .then(result => {
+            if(result.length===0) return res.status(200).json({streakCount:0});
             const dates=result.map(row => row.purchase_date);
             let streakCount=calculateStreak(dates);
             console.log(`Current streak for the customer ${customerId} is ${streakCount}`);

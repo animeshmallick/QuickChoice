@@ -3,6 +3,7 @@ const Database = require('../internal/database.js');
 const Sql = require('../resource/sql.js');
 const token = require('../internal/token');
 const util = require("../utils/utils");
+const Token = require("../internal/token");
 
 const router = express.Router();
 
@@ -11,12 +12,12 @@ const router = express.Router();
  * /deleteHappyHour:
  *   get:
  *     tags:
- *       - User
+ *       - Admin
  *     summary: Delete happy hours for productId
  *     description: Deletes all the Happy hours products.
  *     responses:
  *      200:
- *         description: Happy hours successfully updated
+ *         description: Happy hours successfully deleted
  *      400:
  *         description: Invalid Parameters
  *      500:
@@ -24,7 +25,7 @@ const router = express.Router();
  *
  */
 
-router.get('/', util.verifyStoreName, function (req, res, next) {
+router.get('/', util.verifyStoreName, Token.verifyAdminAuthToken, function (req, res, next) {
     const database = new Database(req.storename);
     try {
         database.query(Sql.delete_happy_hours());
