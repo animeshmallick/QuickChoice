@@ -4,7 +4,7 @@ const InvalidPlaceOrderRequest = require("../exception/InvalidPlaceOrderRequest"
 const AddressOwnershipException = require("../exception/AddressOwnershipException");
 const DuplicatePurchaseIDException = require("../exception/DuplicatePurchaseIDException");
 const ProductOutOfStockError = require("../exception/ProductOutOfStockError");
-const cartHelper = require("./cart");
+const CartHelper = require("./cart");
 const getPurchaseIdHelper = require("./getPurchaseIdHelper");
 
 class PlaceOrderHelper {
@@ -66,6 +66,7 @@ class PlaceOrderHelper {
         }
     }
     createOrders(req, res, next) {
+        const cartHelper=new CartHelper(req.storename);
         if(req.body === undefined || !req.body.hasOwnProperty('cart')) {
             throw new InvalidPlaceOrderRequest("Invalid Place Order Request", 400);
         }else {

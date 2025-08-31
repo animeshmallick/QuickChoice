@@ -17,7 +17,7 @@ class Database {
                 password: process.env.DB_PASSWORD,
                 database: dbName,
                 waitForConnections: true,
-                connectionLimit: 10,
+                connectionLimit: 50,   // adjust based on load
                 queueLimit: 0
             });
 
@@ -26,16 +26,27 @@ class Database {
         }
     }
 
+    /**
+     * Run a query safely using prepared statements
+     * Ensures connections are always released back to pool
+     */
     async query(sql, params = []) {
+        let connection;
         try {
-            const [rows] = await this.#pool.execute(sql, params);
+            connection = await this.#pool.getConnection();   // get a pooled connection
+            const [rows] = await connection.execute(sql, params);
             return rows;
         } catch (err) {
             console.error("SQL Error:", err);
             throw err;
+        } finally {
+            if (connection) connection.release();  // ✅ always release, even on error
         }
     }
 
+    /**
+     * Gracefully close all pools (useful for app shutdown)
+     */
     static async closeAll() {
         for (const pool of Database.#pools.values()) {
             await pool.end();

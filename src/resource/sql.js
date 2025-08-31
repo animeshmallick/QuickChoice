@@ -38,7 +38,7 @@ class Sql {
             return Number(id);
         });
         const query = `SELECT * FROM products WHERE id IN (${numericIds.join(',')}) AND stock > 0;`;
-        
+        console.log(query);
         return query;
     }
 
@@ -174,8 +174,8 @@ class Sql {
         console.log(query);
         return query;
     }
-    get_store_address() {
-        const query = "SELECT * from store_master_data;";
+    get_store_details() {
+        const query = "SELECT * from store_master_data LIMIT 1;";
         console.log(query);
         return query;
     }
@@ -261,6 +261,37 @@ class Sql {
         console.log(query);
         return query;
     }
+
+    update_feedback_for_purchase_id(purchase_id, order_rating, app_experience){
+        const query = `UPDATE purchase SET order_rating = '${order_rating}', app_experience = '${app_experience}' WHERE purchase_id = '${purchase_id}';`
+        console.log(query);
+        return query;
+    }
+
+    set_featured_product_for_product_ids(ids){
+        const query=`UPDATE products SET featured_product=1 WHERE id IN (${ids});`
+        console.log(query);
+        return query;
+    }
+
+    delete_featured_product_for_product_ids(ids){
+        const query=`UPDATE products SET featured_product=0 WHERE id IN (${ids});`
+        console.log(query);
+        return query;
+    }
+
+    get_all_purchase_status_for_today(customerId){
+        const query = `SELECT status, COUNT(*) as counts FROM purchase WHERE customer_id = '${customerId}' AND DATE(placed_on) = CURDATE() GROUP BY status;`
+        console.log(query);
+        return query;
+    }
+
+    get_all_status_from_purchase(){
+        const query = `SELECT status, COUNT(*) as counts FROM purchase WHERE DATE(placed_on) = CURDATE() GROUP BY status;`
+        console.log(query);
+        return query;
+    }
+
 }
 
 module.exports = new Sql();

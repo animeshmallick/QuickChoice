@@ -87,10 +87,20 @@ router.post('/', util.verifyStoreName, function (req, res, next){
     try {
         const database = new Database(req.storename);
         const product_map = cartHelper.getProductMap(req.body);
-        database.query(Sql.get_all_products_in_stock_from_ids(Object.keys(product_map)))
+        database.query(Sql.get_store_details())
             .then(result => {
-                const cart_response = cartHelper.createCartBill(result, product_map);
-                res.status(200).json(cart_response);
+                if(!result.length === 1 && !result[0].hasOwnProperty('store_id')) {
+                    res.status(500).json({error: err.message});
+                }
+                    const storeDetails = result[0];
+                    database.query(Sql.get_all_products_in_stock_from_ids(Object.keys(product_map)))
+                        .then(result => {
+                            const cart_response = cartHelper.createCartBill(result, product_map, storeDetails);
+                            res.status(200).json(cart_response);
+                        })
+                        .catch(err => {
+                            res.status(500).json({error: err.message});
+                        });
             })
             .catch(err => {
                 res.status(500).json({error: err.message});
