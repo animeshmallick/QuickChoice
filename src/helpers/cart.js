@@ -1,5 +1,4 @@
 const InvalidCartError = require("../exception/InvalidCartError");
-const Bill = require("../constants/bill");
 class CartHelper {
     parseCartProducts(result, product_map) {
         result.forEach(product => product['quantity'] = product_map[product.id]);
