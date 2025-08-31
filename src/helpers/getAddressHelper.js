@@ -8,7 +8,7 @@ class AddressHelper {
     }
     async get_default_address(){
         let defaultAddress = {};
-        const rows = await this.#database.query(Sql.get_store_address());
+        const rows = await this.#database.query(Sql.get_store_details());
             if(rows.length === 1){
                 defaultAddress = {
                     store_name: rows[0].store_name,

@@ -174,8 +174,8 @@ class Sql {
         console.log(query);
         return query;
     }
-    get_store_address() {
-        const query = "SELECT * from store_master_data;";
+    get_store_details() {
+        const query = "SELECT * from store_master_data LIMIT 1;";
         console.log(query);
         return query;
     }
