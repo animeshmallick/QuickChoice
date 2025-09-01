@@ -39,18 +39,18 @@ const router = express.Router();
  */
 
 router.post('/', util.verifyStoreName, Token.verifyAdminAuthToken, function (req, res, next) {
-    const payload=req.body;
+    const payload= req.body;
     const database = new Database(req.storename);
-    const tasks=payload.map(result => {
+    const tasks = payload.map(result => {
         if(!result.hasOwnProperty('id')){
             res.status(400).json({status:false, message: "Invalid Parameters Id not found"});
         }
     });
-    const ids=payload.map(row=>row.id).filter(id=>id!==null && id!== undefined && id!=='');
+    const ids = payload.map(row=>row.id).filter(id=>id!==null && id!== undefined && id!=='');
     database.query(Sql.set_featured_product_for_product_ids(ids))
         .then(result =>{
             res.status(200).json({status:true, message: "Featured product updated for productid"});
         })
-        .catch(err => res.status(500).json({error : err}));
+        .catch(err => res.status(500).json({error : err.message}));
 });
 module.exports = router;

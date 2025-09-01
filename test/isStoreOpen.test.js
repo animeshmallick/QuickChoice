@@ -60,7 +60,7 @@ describe('GET /isStoreOpen', () => {
     });
 
     it('should return 500 if database query fails', async () => {
-        mockQuery.mockRejectedValueOnce('DB error');
+        mockQuery.mockRejectedValueOnce(new Error('DB error'));
 
         const res = await request(app).get('/').set('x-storename', 'dummyStore');
 

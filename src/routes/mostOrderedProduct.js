@@ -47,8 +47,9 @@ router.get('/', util.verifyStoreName, token.verifyAuthToken, (req, res) => {
                 .then(result => {
                     console.log(`${result.length} items are most ordered by the customer ${customerId}`);
                     res.status(200).json(result);
-                });
+                })
+                .catch(err => res.status(500).json({error: err.message}));
         })
-        .catch(err => res.status(500).json({error : err}));
+        .catch(err => res.status(500).json({error : err.message}));
 });
 module.exports = router;

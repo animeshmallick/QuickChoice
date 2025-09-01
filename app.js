@@ -85,7 +85,7 @@ app.use('/changeAddress', require('./src/routes/changeAddress'));
 app.use('/mostOrderedProduct', require('./src/routes/mostOrderedProduct'));
 app.use('/deleteAddress', require('./src/routes/deleteAddress'));
 app.use('/getStreakCount', require('./src/routes/getStreakCount'));
-app.use('/setHappyHoursProduct', require('./src/routes/setHappyHoursProduct'));
+app.use('/setHappyHoursProduct', require('./src/routes/setHappyHourProducts'));
 app.use('/deleteHappyHour', require('./src/routes/deleteHappyHour'));
 app.use('/orderFeedback', require('./src/routes/orderFeedback'));
 app.use('/setFeaturedProduct', require('./src/routes/setFeaturedProduct'));

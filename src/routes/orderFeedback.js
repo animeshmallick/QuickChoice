@@ -76,7 +76,7 @@ router.post('/', util.verifyStoreName, token.verifyAuthToken, function (req, res
         .then(result => {
             res.status(200).json({status: true, message: "App experience and delivery feedback updated successfully"});
         })
-        .catch(err => res.status(500).json({error : err}));
+        .catch(err => res.status(500).json({error : err.message}));
 });
 
 module.exports = router;
