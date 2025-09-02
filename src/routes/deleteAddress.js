@@ -38,17 +38,17 @@ router.get('/:address_id', util.verifyStoreName, token.verifyAuthToken,
         const database = new Database(req.storename);
         database.query(Sql.check_if_address_belongs_to_customer(address, customerId))
             .then(result => {
-                if(result.length===0){
+                if(result.length === 0){
                     console.log(`Address ID ${address} does not belong to customer ID ${customerId}`);
                     return res.status(400).json({status: false, message: "Address does not belong to the customerID"});
                 }
                 database.query(Sql.delete_address_for_customer(address, customerId))
-                    .then(newresult => {
+                    .then(() => {
                         console.log(`Address ID ${address} successfully deleted for customer ID ${customerId}`);
                         res.status(200).json({status:true, message: "Address successfully deleted"})
                     })
-                    .catch(err => res.status(500).json({error : err}));
+                    .catch(err => res.status(500).json({error : err.message}));
             })
-            .catch(err => res.status(500).json({error : err}));
+            .catch(err => res.status(500).json({error : err.message}));
     });
 module.exports = router;

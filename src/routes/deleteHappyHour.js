@@ -27,11 +27,12 @@ const router = express.Router();
 
 router.get('/', util.verifyStoreName, Token.verifyAdminAuthToken, function (req, res, next) {
     const database = new Database(req.storename);
-    try {
-        database.query(Sql.delete_happy_hours());
-        res.status(200).json({status: true, message: "Happy hours deleted successfully"});
-    } catch (err) {
-        res.status(500).json({error: err});
-    }
+    database.query(Sql.delete_happy_hours())
+        .then(result => {
+            res.status(200).json({status: true, message: "Happy hours deleted successfully"});
+        })
+        .catch (err=> {
+        res.status(500).json({error: err.message});
+    })
 });
 module.exports = router;

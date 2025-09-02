@@ -34,7 +34,7 @@ router.get('/', util.verifyStoreName, token.verifyAuthToken, (req, res) => {
             });
             res.status(200).json(statusCountMap);
         })
-        .catch(err => res.status(500).json({error : err}));
+        .catch(err => res.status(500).json({error : err.message}));
 });
 
 /**
@@ -62,7 +62,7 @@ router.get("/admin", utils.verifyStoreName, Token.verifyAdminAuthToken, function
             });
             res.status(200).json(statusCountMap);
         })
-        .catch(err => res.status(500).json({error : err}));
+        .catch(err => res.status(500).json({error : err.message}));
 });
 
 module.exports=router;

@@ -39,7 +39,7 @@ router.get('/', util.verifyStoreName, token.verifyAuthToken,  (req, res) => {
             console.log(`Current streak for the customer ${customerId} is ${streakCount}`);
             res.status(200).json({streakCount:streakCount});
         })
-        .catch(err => res.status(500).json({error : err}));
+        .catch(err => res.status(500).json({error : err.message}));
 });
 
 module.exports = router;
